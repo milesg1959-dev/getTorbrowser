@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 cls
 echo :::::::::::::::::::::::::::::
 echo :: getTorbrowser           ::
-echo :: 2022.07.16 by Miles Guo ::
+echo :: 2022.07.17 by Miles Guo ::
 echo :: Use at your own risk.   ::
 echo :::::::::::::::::::::::::::::
 echo .
@@ -65,6 +65,8 @@ echo .
 ::
 :: test download-url
 ::
+echo test %download_url%...
+echo .
 %wget% -t 3 --spider %test_url% 
 if %errorlevel%==0 (echo Okay,the %download_url% is available. & echo . & set usetor=n & goto :readygo)
 ::
@@ -72,16 +74,30 @@ echo Access blocked. Need to run Tor+Privoxy.
 echo .
 echo get the tor running...
 echo .
-set cfg=-f %~dp0tools\toralone\torrc
-cd /d %~dp0tools\toralone\win64
-if %PROCESSOR_ARCHITECTURE%==x86 cd /d %~dp0tools\toralone\win32
-start /min Tor\tor.exe %cfg%
+set startpath=%~dp0tools\toralone\win64
+set torExe=%~dp0tools\toralone\win64\Tor\tor.exe
+set geoIP=%~dp0tools\toralone\win64\Data\Tor\geoip
+set geoIPv6=%~dp0tools\toralone\win64\Data\Tor\geoip6
+if %PROCESSOR_ARCHITECTURE%==x86 (
+set startpath=%~dp0tools\toralone\win32
+set torExe=%~dp0tools\toralone\win32\Tor\tor.exe
+set geoIP=%~dp0tools\toralone\win32\Data\Tor\geoip
+set geoIPv6=%~dp0tools\toralone\win32\Data\Tor\geoip6
+)
+set CTRL_PORT=9051
+set TOR_HOST=127.0.0.1
+set TOR_PORT=9050
+set torrc=%~dp0tools\toralone\torrc
+set tordata=%~dp0tools\toralone\data
+set Tor_HashPass=16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD
+::
+start "toralone" /d %startpath% /min %torExe% -f %torrc% DataDirectory %tordata% GeoIPFile %geoIP% GeoIPv6File %geoIPv6% HashedControlPassword %Tor_HashPass% +__ControlPort %CTRL_PORT% +__SocksPort "%TOR_HOST%:%TOR_PORT% IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth"
+:: __OwningControllerProcess $controllerProcess 
 ::
 echo get the privoxy running...
 echo .
 set cfg=%~dp0tools\privoxy\config_toralone.txt
-cd /d %~dp0tools\privoxy\privoxy
-start /min privoxy.exe %cfg%
+start /d %~dp0tools\privoxy\privoxy /min privoxy.exe %cfg%
 ::
 set usetor=y
 set https_proxy=127.0.0.1:8118
@@ -91,7 +107,7 @@ echo .
 ::
 :: test download-url again until it's available.
 ::
-echo test download-url again until it's available.
+echo test %download_url% again until it's available...
 echo .
 :repeat
 %wget% -t 1 --spider %test_url% 

@@ -16,7 +16,7 @@
 ## controller applications, as documented in control-spec.txt.
 ##
 ## Default: Bind to localhost:9051 for local connections.
-ControlPort 9051
+#ControlPort 9051
 ## for Tor4Edge
 #ControlPort 22051
 ##
@@ -25,7 +25,6 @@ ControlPort 9051
 ##
 ## password:toralone
 HashedControlPassword 16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD
-#HashedControlPassword 16:872860B76453A77D60CA2BB8C1A7042072093276A3D701AD684053EC4C
 ## for Tor4Edge
 #HashedControlPassword 16:DE62E25902F9CABA609678D40107683A711303CA84C78487B8E5BBC604
 #CookieAuthentication 1
@@ -37,7 +36,7 @@ HashedControlPassword 16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74
 ## as a relay, and not make any local application connections yourself.
 #SocksPort {{socks_port}}
 ## Default: Bind to localhost:9050 for local connections.
-SOCKSPort 9050
+#SOCKSPort 9050
 ## for Tor4Edge
 #SocksPort 22050
 ## Bind to this address:port too.
@@ -96,12 +95,12 @@ NewCircuitPeriod 900
 ## things in $HOME/.tor on Unix, and in Application Data\tor on Windows.
 #DataDirectory @LOCALSTATEDIR@/lib/tor
 #DataDirectory {{data_directory}}
-DataDirectory Data
+#DataDirectory Data
 ## 下面是geoip文件路径，geoip的作用也就是判定节点地理位置，配合节点排除或指定节点国家使用，另外作用是显示洋葱浏览器上的国旗、地区。
 #GeoIPFile {{geo_ip_file}}
 #GeoIPv6File {{geo_ipv6_file}}
-GeoIPFile Data\Tor\geoip
-GeoIPv6File Data\Tor\geoip6
+#GeoIPFile Data\Tor\geoip
+#GeoIPv6File Data\Tor\geoip6
 
 ## 下面是排除邪恶国家节点，去掉前面#号即可开启
 #ExcludeExitNodes {cn},{hk},{mo},{kp},{ir},{cu},{vn},{ru},{by},{kz},{uz},{pk},{kg},{tj},{tm},{tr},{sy},{sg},{th},{ph},{my},{lk},{??}
