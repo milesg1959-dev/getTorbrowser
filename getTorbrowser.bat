@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 cls
 echo :::::::::::::::::::::::::::::
 echo :: getTorbrowser           ::
-echo :: 2022.07.17 by Miles Guo ::
+echo :: 2022.07.19 by Miles Guo ::
 echo :: Use at your own risk.   ::
 echo :::::::::::::::::::::::::::::
 echo .
@@ -20,9 +20,12 @@ echo .
 set grep=%~dp0tools\grep\win32\grep.exe
 set curl=%~dp0tools\curl\win64\bin\curl.exe
 set wget=%~dp0tools\wget\win64\wget.exe
-if %PROCESSOR_ARCHITECTURE%==x86 (set curl=%~dp0tools\curl\win32\bin\curl.exe & set wget=%~dp0tools\wget\win32\wget.exe)
+if %PROCESSOR_ARCHITECTURE%==x86 (
+  set curl=%~dp0tools\curl\win32\bin\curl.exe
+  set wget=%~dp0tools\wget\win32\wget.exe
+)
 ::
-:: Primary site or Mirror site
+:: set the torproject download site.
 ::
 :: Primary site. First choice, but need to run Tor+Privoxy
 :: https://www.torproject.org/download/
@@ -58,7 +61,12 @@ echo .
 echo test %test_url%...
 echo .
 %wget% -t 3 --spider %test_url% 
-if %errorlevel%==0 (echo Okay,the %download_url% is available. & echo . & set toraloneprivoxy=n & goto :readygo)
+if %errorlevel%==0 (
+  echo Okay,the %download_url% is available.
+  echo .
+  set toraloneprivoxy=n
+  goto :readygo
+)
 ::
 echo Access blocked. Need to run Tor+Privoxy.
 echo .
@@ -69,10 +77,10 @@ set torExe=%~dp0tools\toralone\win64\Tor\tor.exe
 set geoIP=%~dp0tools\toralone\win64\Data\Tor\geoip
 set geoIPv6=%~dp0tools\toralone\win64\Data\Tor\geoip6
 if %PROCESSOR_ARCHITECTURE%==x86 (
-set startpath=%~dp0tools\toralone\win32
-set torExe=%~dp0tools\toralone\win32\Tor\tor.exe
-set geoIP=%~dp0tools\toralone\win32\Data\Tor\geoip
-set geoIPv6=%~dp0tools\toralone\win32\Data\Tor\geoip6
+  set startpath=%~dp0tools\toralone\win32
+  set torExe=%~dp0tools\toralone\win32\Tor\tor.exe
+  set geoIP=%~dp0tools\toralone\win32\Data\Tor\geoip
+  set geoIPv6=%~dp0tools\toralone\win32\Data\Tor\geoip6
 )
 set CTRL_PORT=9051
 set TOR_HOST=127.0.0.1
@@ -163,9 +171,10 @@ echo .
 echo download completed,have fun:-)
 echo .
 ::
-if %toraloneprivoxy%==n goto :exit
-start taskkill /im tor.exe /F /T & start taskkill /im privoxy.exe /F /T
-:exit
+if %toraloneprivoxy%==y (
+  start taskkill /im tor.exe /F /T
+  start taskkill /im privoxy.exe /F /T
+)
 echo Press any key to exit.
 pause > nul
 endlocal & goto :eof
