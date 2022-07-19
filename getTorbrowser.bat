@@ -14,23 +14,13 @@ echo Hey buddy.
 echo .
 echo Today is: %date% %time%
 echo .
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo your CPU is: %PROCESSOR_ARCHITECTURE%
-::echo .
-::echo valid_platforms ["win32", "win64"]
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 :: curl,wget,grep
 ::
+set grep=%~dp0tools\grep\win32\grep.exe
 set curl=%~dp0tools\curl\win64\bin\curl.exe
 set wget=%~dp0tools\wget\win64\wget.exe
-set grep=%~dp0tools\grep\win32\grep.exe
-if %PROCESSOR_ARCHITECTURE%==x86 (set curl=%~dp0tools\curl\win32\bin\curl.exe & set wget=%~dp0tools\win32\wget.exe)
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo %curl% %wget%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
+if %PROCESSOR_ARCHITECTURE%==x86 (set curl=%~dp0tools\curl\win32\bin\curl.exe & set wget=%~dp0tools\wget\win32\wget.exe)
 ::
 :: Primary site or Mirror site
 ::
@@ -63,12 +53,12 @@ echo .
 echo We will test whether it is available.
 echo .
 ::
-:: test download-url
+:: test test-url
 ::
-echo test %download_url%...
+echo test %test_url%...
 echo .
 %wget% -t 3 --spider %test_url% 
-if %errorlevel%==0 (echo Okay,the %download_url% is available. & echo . & set usetor=n & goto :readygo)
+if %errorlevel%==0 (echo Okay,the %download_url% is available. & echo . & set toraloneprivoxy=n & goto :readygo)
 ::
 echo Access blocked. Need to run Tor+Privoxy.
 echo .
@@ -99,15 +89,15 @@ echo .
 set cfg=%~dp0tools\privoxy\config_toralone.txt
 start /d %~dp0tools\privoxy\privoxy /min privoxy.exe %cfg%
 ::
-set usetor=y
+set toraloneprivoxy=y
 set https_proxy=127.0.0.1:8118
 ::
 echo Okey,Tor+Privoxy has started.
 echo .
 ::
-:: test download-url again until it's available.
+:: test test-url again until it's available.
 ::
-echo test %download_url% again until it's available...
+echo test %test_url% again until it's available...
 echo .
 :repeat
 %wget% -t 1 --spider %test_url% 
@@ -115,55 +105,23 @@ if %errorlevel% neq 0 goto :repeat
 ::
 echo Okey,now the %download_url% is available.
 echo .
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo %usetor% %https_proxy%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 :readygo
 echo Let's Go.
 echo .
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo Press any key to continue...
-::echo .
-::pause > nul
-::goto :exit
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 set TBpath=
 for /f "tokens=*" %%a in ('%curl% -s %test_url% ^| %grep% -o -E -m 1 "dist/torbrowser/([^/]+)/"') do set TBpath=%%a
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo recent torbrowser download-path is: %TBpath%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 set TBver=%TBpath:~16,-1%
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo recent torbrowser version is: %TBver%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 for /f "delims=" %%b in ('%curl% -s %download_url%%TBver%/ ^| %grep% -o -E -m 1 ">tor-win64-([^/]+)zip"') do set TBpath1=%%b
 set Tver=%TBpath1:~11,-4%
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo recent tor version is: %Tver%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 set dst=%~dp0Torbrowser\%TBver%
 set opt=-c -t 0 -P %dst%
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo torbrowser save-path is: %dst%
-::echo .
-::echo wget option is: %opt%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 set locale=zh-CN
 ::set locale=en-US
-::echo :::::::: The following code are for testing purposes only. You can comment them out later. ::::::::
-::echo your locale is: %locale%
-::echo .
-::echo :::::::: The code above are only for testing purposes. You can comment them out later. ::::::::
 ::
 :: get torbrowser from download url... 
 ::
@@ -205,7 +163,7 @@ echo .
 echo download completed,have fun:-)
 echo .
 ::
-if %usetor%==n goto :exit
+if %toraloneprivoxy%==n goto :exit
 start taskkill /im tor.exe /F /T & start taskkill /im privoxy.exe /F /T
 :exit
 echo Press any key to exit.
