@@ -1,0 +1,559 @@
+commit f6020f8a7d48cf142a5f55e1b0c747175c077b95 (HEAD, tag: v0.6.0, origin/main, origin/HEAD, main)
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-20
+
+    Bump package and library versions
+
+commit c0e22863c04426cea7f0295e6395d9854796ae30
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-20
+
+    Update doc
+
+commit 8f460edb6a9169cbf22e8f5993304c1b3925cd17
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-20
+
+    Update AUTHORS
+
+commit e0a9b7c356e02868e5a95dee5110687c3d2a46cd
+Merge: e22d2f61 92156324
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-20
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-20
+
+    Merge pull request #473 from ngtcp2/h09server-port
+    
+    Port a13f4f1e52ed35c6366843753cffa4e41e723330 to h09server
+
+commit 92156324ceb90361031ceefbd65670f00ac85d40
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-20
+
+    Port a13f4f1e52ed35c6366843753cffa4e41e723330 to h09server
+
+commit e22d2f6104111b07d6121c5fea148bb59a05bc62
+Merge: c2f8e315 a2e34de5
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-19
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-19
+
+    Merge pull request #472 from ngtcp2/crypto-handshake-helper-func-doc
+    
+    Document crypto handshake helper functions
+
+commit a2e34de5e1ed04d3bc57b6a9f70796adc5cc29be
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-19
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-19
+
+    Document crypto handshake helper functions
+
+commit c2f8e315f54a9c6cde0a8716f25d4147693d8eae
+Merge: 44db7449 68755e4f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-16
+
+    Merge pull request #471 from ngtcp2/encode_transport_params-length
+    
+    Return the number of bytes required to store an encoded TP
+
+commit 68755e4fc42cd1d6dd29ef5d4bc0fdb78fe166ec
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-15
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-15
+
+    Return the number of bytes required to store an encoded TP
+    
+    By passing dest = NULL and destlen = 0, now
+    ngtcp2_encode_transport_params just returns the number of bytes
+    required to store the encoded transport parameters.
+
+commit 44db74494c4e300d458254b5e88479d31f8a94c3
+Merge: 91317f78 7ca2b706
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-14
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-14
+
+    Merge pull request #468 from ngtcp2/unsigned-flags
+    
+    Make all flags unsigned explicitly
+
+commit 91317f7810f4c886bea649b7f7029fef87837652
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-13
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-13
+
+    clang-format
+
+commit 7ca2b706bb3b243176cb08fc193da70723686d01
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-13
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-13
+
+    Make all flags unsigned explicitly
+
+commit c535dfa27198a72db97ac435468b193926886341
+Merge: f183234f 2251026b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-11
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-11
+
+    Merge pull request #465 from msoxzw/patch-1
+    
+    Disable the internal session cache if TLS session is stored externally
+
+commit f183234f00fdb029acc21d41c3ece874e09a506f
+Merge: 6d618dd1 a13f4f1e
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-11
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-11
+
+    Merge branch 'JunqiWang-main'
+
+commit a13f4f1e52ed35c6366843753cffa4e41e723330
+Author:     Junqi Wang <junqiw@fb.com>
+AuthorDate: 2022-06-06
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-11
+
+    Add option to override ack_thresh
+
+commit 2251026b8cf0d6dd92171a77443f84d885f65547
+Author:     msoxzw <56633971+msoxzw@users.noreply.github.com>
+AuthorDate: 2022-06-09
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-09
+
+    Disable the internal session cache in BoringSSL
+
+commit 7cfab45a9ec66d659255ecf53259d10b6c50986d
+Author:     msoxzw <56633971+msoxzw@users.noreply.github.com>
+AuthorDate: 2022-06-09
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-09
+
+    Disable the internal session cache in OpenSSL
+
+commit 6d618dd1fedbdf02476312327f5f4ac5ffc05925
+Merge: de964e2a df7bc841
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-07
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-07
+
+    Merge pull request #462 from ngtcp2/max-stream-data-left
+    
+    Add ngtcp2_conn_get_max_stream_data_left
+
+commit df7bc8418db0d55389382c8617f45924962610c7
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-07
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-07
+
+    Add ngtcp2_conn_get_max_stream_data_left
+
+commit de964e2a8c5766d6174218f567d4524c695edca6
+Merge: 694409e9 7113297f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-05
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-05
+
+    Merge pull request #460 from ngtcp2/crypto-handshake-helper-fix
+    
+    Crypto handshake helper fix
+
+commit 7113297f6f2a91d033994cd15a5432b1f7f8c7b7
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-05
+
+    Fix double free if recv_{rx,tx}_key callback fails
+
+commit 4ecd820ea25dc63ca0a5ccb4cead1cca172d72a3
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-05
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-05
+
+    crypto/openssl: Do not set max_early_data unconditionally
+    
+    Do not set max_early_data unconditionally because application might
+    want to disable 0RTT.
+
+commit 694409e9cfc74e66763d6acb42794f47ae85c8fb
+Merge: f1fdcc77 0135d3b1
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-04
+
+    Merge pull request #459 from ngtcp2/get-local-transport-params
+    
+    Make ngtcp2_conn_get_local_transport_params return pointer
+
+commit 0135d3b1ce8311846d2de438e06a05be857b7090
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-04
+
+    Make ngtcp2_conn_get_local_transport_params return pointer
+    
+    Make ngtcp2_conn_get_local_transport_params return a pointer to the
+    stored object.
+
+commit f1fdcc776f51ea99956004b4ae6616731cee9076
+Merge: 1ff2bb0c 49759aa7
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-04
+
+    Merge pull request #458 from ngtcp2/hide-ngtcp2_conn_set_remote_transport_params
+    
+    Hide ngtcp2_conn_set_remote_transport_params
+
+commit 1ff2bb0c5d43d408ef34358125ad2882e712ca17
+Merge: 3e2d9482 a2008a1e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-04
+
+    Merge pull request #457 from ngtcp2/remove-unused-functions
+    
+    Remove unused functions
+
+commit 49759aa75f159f9b0ddb4efd2e39a08dacab1638
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-04
+
+    Hide ngtcp2_conn_set_remote_transport_params
+    
+    Hide ngtcp2_conn_set_remote_transport_params in favor of
+    ngtcp2_conn_decode_remote_transport_params.
+
+commit a2008a1e23e838079af0b92c5020fb88017148b2
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-04
+
+    Remove unused functions
+
+commit 3e2d9482872ed056ac726bdf3ac6222e9aef21be
+Merge: e30eaff7 f17b42fe
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-04
+
+    Merge pull request #456 from ngtcp2/remote-transport-params-pointer
+    
+    Allocate remote transport parameters dynamically
+
+commit f17b42fe4050b34c4ceb8c4149876e21054f24b9
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-04
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-04
+
+    Allocate remote transport parameters dynamically
+    
+    Allocate remote transport parameters dynamically in order to retain all
+    fields.
+
+commit e30eaff715765d00ebd30ebf9bd59381c1433a9f
+Merge: 1374fd1e a6ef20ca
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-04
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-04
+
+    Merge pull request #455 from ngtcp2/decode_transport_params_new
+    
+    Add ngtcp2_decode_transport_params_new
+
+commit a6ef20ca39495853081f26b332d30b7320cdd019
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-02
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-04
+
+    Add ngtcp2_decode_transport_params_new
+
+commit 1374fd1ec678c7f8c67463e9ee4aa598df576dbd
+Merge: 55f55a16 3868a68f
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-02
+
+    Merge pull request #454 from ngtcp2/crypto-handshake-helper
+    
+    Implement crypto handshake helper functions
+
+commit 3868a68f08a7eb4f7ac5455e71a2f9d42dcacccc
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-29
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-02
+
+    Implement crypto handshake helper functions
+    
+    Implement crypto handshake helper functions to make the integration of
+    TLS handshake into ngtcp2 applications easier.
+
+commit 55f55a163011e1a9fbb361a3b9e1e70836c02376
+Merge: c65cce08 d2b09719
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-02
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-02
+
+    Merge pull request #453 from ngtcp2/early-key-version
+    
+    Use client chosen version for early key derivation
+
+commit c65cce089677ca6976708fe57eb1f370fac85ffc
+Merge: d0cc7860 1a3960b5
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-01
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-01
+
+    Merge pull request #452 from ngtcp2/fix-ptls-aead-decrypt
+    
+    Verify whether ptls_aead_decrypt succeeds
+
+commit d2b097199346d6dc2dc07ec490deaa421450292a
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-01
+
+    Use client chosen version for early key derivation
+
+commit 1a3960b54ac5007f86f840f736618170eed2c81c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-01
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-01
+
+    Verify whether ptls_aead_decrypt succeeds
+
+commit d0cc7860c99c7cb436cdf3cbc934774f0da99413
+Merge: d3425483 d6c59d0b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-28
+
+    Merge pull request #451 from ngtcp2/conn-encode-decode-tp
+    
+    Add functions to encode/decode transport parameters directly
+
+commit d6c59d0be62cf6d4608daaaa52d942f892954c72
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-28
+
+    Add functions to encode/decode transport parameters directly
+    
+    Add functions to encode or decode transport parameters from or to
+    ngtcp2_conn directly.
+
+commit d3425483740207cfa91cfbf90411e312a15ba409
+Merge: 8183ba42 6508dc77
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-28
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-28
+
+    Merge pull request #450 from ngtcp2/nullify-tp-version-info
+    
+    Nullify QUIC transport parameters version_info when set
+
+commit 6508dc772a3357ef74acd94507fc7391f927c0f2
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-28
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-28
+
+    Nullify QUIC transport parameters version_info when set
+    
+    Nullify QUIC transport parameters version_info when set because they
+    could contain dangling pointers, and they are not used after that at
+    the moment.
+
+commit 8183ba423ce282a3efc96133ae016c65caefdb39
+Merge: a859ce55 27aba252
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-22
+
+    Merge pull request #447 from ngtcp2/recover-gso-failure
+    
+    Disable GSO when sendmsg returns EIO
+
+commit 27aba252dd5e4aed3310f79ed5bbcea8adef91d6
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Disable GSO when sendmsg returns EIO
+
+commit a859ce55a0ca17d13f3d369e476e367c27f632c2
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Move runs-on under strategy
+
+commit dcbea6a47878c8be9e3b80a49abb44f39f17afe4
+Merge: e30b98d4 3d65f931
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-22
+
+    Merge pull request #446 from ngtcp2/bump-ubuntu
+    
+    Bump ubuntu
+
+commit 3d65f9312ed9cdda369d46d72c18d5c747e61c73
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-21
+
+    Use packaged gnutls
+
+commit 137a0b957304760569960e957dddc5d1cb04a95c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-21
+
+    Bump ubuntu
+
+commit e30b98d406c360e453e2f9c5d4cad1bb196de31a
+Merge: ff552473 8e7b3d53
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-21
+
+    Merge pull request #445 from ngtcp2/build-cross
+    
+    Build cross
+
+commit 8e7b3d530da80effc63fa217dafd9e9d6d091d4c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-21
+
+    Fix compile errors with x86_64-w64-mingw32-gcc and i686-w64-mingw32-gcc
+
+commit d3221440d9a5c892c9d3292544c8cec618b8c300
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-21
+
+    workflow: Add cross build
+
+commit ff552473a615093200f3c5d05d785ca865dda38d
+Merge: 9c87660e 664370b1
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-21
+
+    Merge pull request #444 from ngtcp2/msc-specific
+    
+    Guard MSC specific stuff with _MSC_VER
+
+commit 664370b1b4802f242e816df1203450dd17d2e10e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-21
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-21
+
+    Guard MSC specific stuff with _MSC_VER
+
+commit 9c87660e677f736dbf070d0ce01042fb0f944723
+Merge: 14b26287 fd5c1a69
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-20
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-20
+
+    Merge pull request #443 from ngtcp2/define-max-pmtud-udp-payload-size
+    
+    Define NGTCP2_MAX_PMTUD_UDP_PAYLOAD_SIZE
+
+commit fd5c1a69cabadfc5215544b6d4a704e4a0162c2b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-20
+
+    Define NGTCP2_MAX_PMTUD_UDP_PAYLOAD_SIZE
+
+commit 14b2628718ec874912e51d5b0c820f6a107f8239
+Merge: 3166b301 66bca924
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-16
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-16
+
+    Merge pull request #442 from ngtcp2/nproc
+    
+    Define NPROC as the number of available processors
+
+commit 66bca924f325ba376c8701731b4605fe6ddb8916
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-16
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-16
+
+    Define NPROC as the number of available processors
+
+commit 3166b30167a5d0b260eda2dfb326bb2b79e28f91
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-16
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-16
+
+    Bump package version

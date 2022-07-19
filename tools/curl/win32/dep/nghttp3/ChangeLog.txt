@@ -1,0 +1,221 @@
+commit 1769a753ccfa218349085d0674fba9ccbacd9344 (HEAD, tag: v0.5.0, origin/main, origin/HEAD, main)
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-20
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-20
+
+    Bump package and library versions
+
+commit 41a06689483cf9f54403e72946c903052bc416ec
+Merge: 140ae05 dd73db0
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-13
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-13
+
+    Merge pull request #69 from ngtcp2/unsigned-flags
+    
+    Make all flags unsigned explicitly
+
+commit dd73db0e9dca741addcd8785c011616d6f06ec75
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-13
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-13
+
+    Make all flags unsigned explicitly
+
+commit 140ae05a9adbef5c7c96cadc1b5a59f8d29b172c
+Merge: c145dc5 dfbf0f4
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-13
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-13
+
+    Merge pull request #68 from ngtcp2/bad-priority
+    
+    Ignore priority unless all priority header fields are processed
+
+commit dfbf0f4cf882f7e219557fec9fe46d049abe9121
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-13
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-13
+
+    Ignore priority unless all priority header fields are processed
+
+commit c145dc56febefb0a8759b79848c42b84e60034a4
+Merge: 4ebfc88 4f4f97e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-12
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-12
+
+    Merge pull request #67 from ngtcp2/ignore-priority-in-trailers
+    
+    Ignore priority header field in trailer fields
+
+commit 4f4f97ed37452767b1ebb0e7cba56238152d0a8b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-12
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-12
+
+    Ignore priority header field in trailer fields
+    
+    RFC9110 Section 16.3.2 states that each header field specification
+    needs to document that whether or not the header field is allowed in
+    trailers, and by default it will not be allowed.  RFC9218 does not say
+    anything about trailers, which means that priority header field is not
+    allowed in trailers.  Therefore, we ignore priority header field.
+
+commit 4ebfc8827f609d726cf897ee2ba6ebaa7664b061
+Merge: 4995063 473df4e
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-06-11
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-06-11
+
+    Merge pull request #66 from ngtcp2/host-in-resp-field
+    
+    The use of host in response field section is undefined
+
+commit 473df4e27d82747d77cf09bca301714db50b86f4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-06-11
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-06-11
+
+    The use of host in response field section is undefined
+
+commit 49950636a0d3b838b1fba3b92ea12dd25b24283b
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Move runs-on under strategy
+
+commit 006f0c4ac60e842e7ab7a120871bc04b81eeee27
+Merge: 22b2d6d c0c97a6
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-22
+
+    Merge pull request #65 from ngtcp2/bump-ubuntu
+    
+    Bump ubuntu
+
+commit c0c97a60f5efd0b406c2359fb70e29d869379b57
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Bump ubuntu
+
+commit 22b2d6df7992e72bc82481a1bb248d9d06bb2aed
+Merge: eb8ff29 3d28d25
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-22
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-22
+
+    Merge pull request #64 from ngtcp2/cross-build
+    
+    Cross build
+
+commit 3d28d25ba2ec6c053eff32859c2975be74f55be5
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-21
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Fix compile errors with x86_64-w64-mingw32-gcc and i686-w64-mingw32-gcc
+
+commit 0d5a87dde25dcd765070a012612d4f125f016f3c
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-22
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-22
+
+    Add cross build
+
+commit eb8ff29a1bd97d11138be9618c3d9f951b7b2ccd
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-19
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-19
+
+    Cleanup
+
+commit c4f5f136a7ebec16611ee4937fd46d80030d0c25
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-19
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-19
+
+    Small optimization
+
+commit 975c893893350a916de3fb022a0d6751b643a377
+Merge: 5bba203 fb6e78b
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-15
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-15
+
+    Merge pull request #62 from ngtcp2/map-fix
+    
+    Fix the bug that tablelen and table pointer become out of sync
+
+commit 5bba203c366c0ff0769991761b6235c6cddc166e
+Merge: a249bb6 49fd714
+Author:     Tatsuhiro Tsujikawa <404610+tatsuhiro-t@users.noreply.github.com>
+AuthorDate: 2022-05-15
+Commit:     GitHub <noreply@github.com>
+CommitDate: 2022-05-15
+
+    Merge pull request #63 from ngtcp2/bump-macos
+    
+    workflow: Bump macos
+
+commit 49fd714061befca4307770010c31b17ca5d8ddc4
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-15
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-15
+
+    workflow: Bump macos
+
+commit fb6e78b286ab5e8203de239232f32c6d26c87bd9
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-15
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-15
+
+    Fix the bug that tablelen and table pointer become out of sync
+
+commit a249bb6a2e9c0d0b32e9a76a2a2d432b52b12ada
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-15
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-15
+
+    Add windows build workflow
+
+commit dc0957b231f643467180a736831a2f93f8e44b06
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-05-15
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-05-15
+
+    Bump actions/checkout to v3
+
+commit dc2bbd6cdc5078555b7b97a94a363465f98f93e2
+Author:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+AuthorDate: 2022-04-25
+Commit:     Tatsuhiro Tsujikawa <tatsuhiro.t@gmail.com>
+CommitDate: 2022-04-25
+
+    Bump package version

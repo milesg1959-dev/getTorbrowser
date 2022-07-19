@@ -1,0 +1,170 @@
+## Configuration file for a typical Tor user
+## Last updated 28 February 2019 for Tor 0.3.5.1-alpha.
+## (may or may not work for much older or much newer versions of Tor.)
+##
+## Lines that begin with "## " try to explain what's going on. Lines
+## that begin with just "#" are disabled commands: you can enable them
+## by removing the "#" symbol.
+##
+## See 'man tor', or https://www.torproject.org/docs/tor-manual.html,
+## for more options you can use in this file.
+##
+## Tor will look for this file in various places based on your platform:
+## https://www.torproject.org/docs/faq#torrc
+
+## The port on which Tor will listen for local connections from Tor
+## controller applications, as documented in control-spec.txt.
+##
+## Default: Bind to localhost:9051 for local connections.
+#ControlPort 9051
+## for Tor4Edge
+#ControlPort 22051
+##
+## If you enable the controlport, be sure to enable one of these
+## authentication methods, to prevent attackers from accessing it.
+##
+## password:toralone
+HashedControlPassword 16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD
+## for Tor4Edge
+#HashedControlPassword 16:DE62E25902F9CABA609678D40107683A711303CA84C78487B8E5BBC604
+#CookieAuthentication 1
+#CookieAuthFile {{cookie_auth_file}}
+#CookieAuthFile Data\cookie
+
+## Tor opens a SOCKS proxy on port 9050 by default -- even if you don't
+## configure one below. Set "SOCKSPort 0" if you plan to run Tor only
+## as a relay, and not make any local application connections yourself.
+#SocksPort {{socks_port}}
+## Default: Bind to localhost:9050 for local connections.
+#SOCKSPort 9050
+## for Tor4Edge
+#SocksPort 22050
+## Bind to this address:port too.
+#SOCKSPort 192.168.0.1:9100
+## 下面是跨机共享代理，去掉前面#号即可开启
+#SocksPort 0.0.0.0:9050
+
+## Entry policies to allow/deny SOCKS requests based on IP address.
+## First entry that matches wins. If no SOCKSPolicy is set, we accept
+## all (and only) requests that reach a SOCKSPort. Untrusted users who
+## can access your SOCKSPort may be able to learn about the connections
+## you make.
+#SOCKSPolicy accept 192.168.0.0/16
+#SOCKSPolicy accept6 FC00::/7
+#SOCKSPolicy reject *
+
+## 下面是前置代理，去掉前面#号即可开启
+#HTTPSProxy 127.0.0.1:8787
+#Socks5Proxy 127.0.0.1:1080 
+
+## Logs go to stdout at level "notice" unless redirected by something
+## else, like one of the below lines. You can have as many Log lines as
+## you want.
+##
+## We advise using "notice" in most cases, since anything more verbose
+## may provide sensitive information to an attacker who obtains the logs.
+##
+## Send all messages of level 'notice' or higher to @LOCALSTATEDIR@/log/tor/notices.log
+#Log notice file @LOCALSTATEDIR@/log/tor/notices.log
+##
+## Send every possible message to @LOCALSTATEDIR@/log/tor/debug.log
+#Log debug file @LOCALSTATEDIR@/log/tor/debug.log
+##
+## Use the system log instead of Tor's logfiles
+#Log notice syslog
+##
+## To send all messages to stderr:
+#Log debug stderr
+##
+## 下面是日志路径，打开后终端不会显示连接日志
+#Log notice file ./Data/tor.log 
+##
+## Where to send logging messages.  Format is minSeverity[-maxSeverity]
+## (stderr|stdout|syslog|file FILENAME).
+Log notice stdout
+DormantCanceledByStartup 1
+
+## If non-zero, try to write to disk less frequently than we would otherwise.
+## 较少对硬盘的读写
+AvoidDiskWrites 1
+
+## tor默认的重建链路的时间是30s，可以适当延长时间保证速度
+NewCircuitPeriod 900
+
+## The directory for keeping all the keys/etc. By default, we store
+## things in $HOME/.tor on Unix, and in Application Data\tor on Windows.
+#DataDirectory @LOCALSTATEDIR@/lib/tor
+#DataDirectory {{data_directory}}
+#DataDirectory Data
+## 下面是geoip文件路径，geoip的作用也就是判定节点地理位置，配合节点排除或指定节点国家使用，另外作用是显示洋葱浏览器上的国旗、地区。
+#GeoIPFile {{geo_ip_file}}
+#GeoIPv6File {{geo_ipv6_file}}
+#GeoIPFile Data\Tor\geoip
+#GeoIPv6File Data\Tor\geoip6
+
+## 下面是排除邪恶国家节点，去掉前面#号即可开启
+#ExcludeExitNodes {cn},{hk},{mo},{kp},{ir},{cu},{vn},{ru},{by},{kz},{uz},{pk},{kg},{tj},{tm},{tr},{sy},{sg},{th},{ph},{my},{lk},{??}
+#ExcludeNodes {cn},{hk},{mo},{sg},{th},{pk},{by},{ru},{ir},{vn},{ph},{my},{cu}
+## 下面是强制排除邪恶国家节点，即使Tor找不到可用的线路，也不会去尝试这些国家的节点，去掉前面#号开启
+#StrictNodes 1
+## 下面是指定国家出口节点，比如德国，法国，荷兰
+#ExitNodes {de},{fr},{nl}
+## 下面是指定出口IP，和上面指定出口国家不可同时开启，二选一
+#ExitNodes 185.248.160.65,54.37.16.241,46.182.106.190
+## StrictExitNodes的意思是需要按照ExitNodes指定节点作为出口
+#StrictExitNodes 1
+
+## Configuration options can be imported from files or folders using the %include
+## option with the value being a path. This path can have wildcards. Wildcards are 
+## expanded first, using lexical order. Then, for each matching file or folder, the following 
+## rules are followed: if the path is a file, the options from the file will be parsed as if
+## they were written where the %include option is. If the path is a folder, all files on that
+## folder will be parsed following lexical order. Files starting with a dot are ignored. Files
+## on subfolders are ignored.
+## The %include option can be used recursively.
+#%include /etc/torrc.d/*.conf
+
+## 下面数字改为0，关闭自带网桥连接，开启前置代理
+UseBridges 1
+
+## Bridge configurations
+#ClientTransportPlugin meek_lite,obfs2,obfs3,obfs4,scramblesuit exec {{obfs4proxy_path}} managed
+ClientTransportPlugin meek_lite,obfs2,obfs3,obfs4,scramblesuit exec Tor\PluggableTransports\obfs4proxy.exe managed
+##
+#ClientTransportPlugin snowflake exec {{snowflake_path}} -url https://snowflake-broker.torproject.net.global.prod.fastly.net/ -front cdn.sstatic.net -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 managed
+ClientTransportPlugin snowflake exec Tor\PluggableTransports\snowflake-client.exe -url https://snowflake-broker.torproject.net.global.prod.fastly.net/ -front cdn.sstatic.net -ice stun:stun.l.google.com:19302,stun:stun.voip.blackberry.com:3478,stun:stun.altar.com.pl:3478,stun:stun.antisip.com:3478,stun:stun.bluesip.net:3478,stun:stun.dus.net:3478,stun:stun.epygi.com:3478,stun:stun.sonetel.com:3478,stun:stun.sonetel.net:3478,stun:stun.stunprotocol.org:3478,stun:stun.uls.co.za:3478,stun:stun.voipgate.com:3478,stun:stun.voys.nl:3478 managed
+
+#ClientOnionAuthDir Data\onion-auth
+
+## 下面是普通网桥写法：
+#Bridge 66.42.73.78:40367 8975AAF1A5317E04600F30AD3ED43083820FF516
+
+## Enable built-in obfs4 bridge
+#Bridge obfs4 144.217.20.138:80 FB70B257C162BF1038CA669D568D76F5B7F0BABB cert=vYIV5MgrghGQvZPIi1tJwnzorMgqgmlKaB77Y3Z9Q/v94wZBOAXkW+fdx4aSxLVnKO+xNw iat-mode=0
+#Bridge obfs4 146.57.248.225:22 10A6CD36A537FCE513A322361547444B393989F0 cert=K1gDtDAIcUfeLqbstggjIw2rtgIKqdIhUlHp82XRqNSq/mtAjp1BIC9vHKJ2FAEpGssTPw iat-mode=0
+#Bridge obfs4 192.95.36.142:443 CDF2E852BF539B82BD10E27E9115A31734E378C2 cert=qUVQ0srL1JI/vO6V6m/24anYXiJD3QP2HgzUKQtQ7GRqqUvs7P+tG43RtAqdhLOALP7DJQ iat-mode=1
+#Bridge obfs4 193.11.166.194:27015 2D82C2E354D531A68469ADF7F878FA6060C6BACA cert=4TLQPJrTSaDffMK7Nbao6LC7G9OW/NHkUwIdjLSS3KYf0Nv4/nQiiI8dY2TcsQx01NniOg iat-mode=0
+#Bridge obfs4 193.11.166.194:27020 86AC7B8D430DAC4117E9F42C9EAED18133863AAF cert=0LDeJH4JzMDtkJJrFphJCiPqKx7loozKN7VNfuukMGfHO0Z8OGdzHVkhVAOfo1mUdv9cMg iat-mode=0
+#Bridge obfs4 193.11.166.194:27025 1AE2C08904527FEA90C4C4F8C1083EA59FBC6FAF cert=ItvYZzW5tn6v3G4UnQa6Qz04Npro6e81AP70YujmK/KXwDFPTs3aHXcHp4n8Vt6w/bv8cA iat-mode=0
+#Bridge obfs4 209.148.46.65:443 74FAD13168806246602538555B5521A0383A1875 cert=ssH+9rP8dG2NLDN2XuFw63hIO/9MNNinLmxQDpVa+7kTOa9/m+tGWT1SmSYpQ9uTBGa6Hw iat-mode=0
+#Bridge obfs4 37.218.245.14:38224 D9A82D2F9C2F65A18407B1D2B764F130847F8B5D cert=bjRaMrr1BRiAW8IE9U5z27fQaYgOhX1UCmOpg2pFpoMvo6ZgQMzLsaTzzQNTlm7hNcb+Sg iat-mode=0
+#Bridge obfs4 38.229.1.78:80 C8CBDB2464FC9804A69531437BCF2BE31FDD2EE4 cert=Hmyfd2ev46gGY7NoVxA9ngrPF2zCZtzskRTzoWXbxNkzeVnGFPWmrTtILRyqCTjHR+s9dg iat-mode=1
+#Bridge obfs4 38.229.33.83:80 0BAC39417268B96B9F514E7F63FA6FBA1A788955 cert=VwEFpk9F/UN9JED7XpG1XOjm/O8ZCXK80oPecgWnNDZDv5pdkhq1OpbAH0wNqOT6H6BmRQ iat-mode=1
+#Bridge obfs4 45.145.95.6:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
+#Bridge obfs4 51.222.13.177:80 5EDAC3B810E12B01F6FD8050D2FD3E277B289A08 cert=2uplIpLQ0q9+0qMFrK5pkaYRDOe460LL9WHBvatgkuRr/SL31wBOEupaMMJ6koRE6Ld0ew iat-mode=0
+#Bridge obfs4 85.31.186.26:443 91A6354697E6B02A386312F68D82CF86824D3606 cert=PBwr+S8JTVZo6MPdHnkTwXJPILWADLqfMGoVvhZClMq/Urndyd42BwX9YFJHZnBB3H0XCw iat-mode=0
+#Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
+#Bridge obfs4 [2a0c:4d80:42:702::1]:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
+#Bridge obfs4 66.42.73.78:41563 8975AAF1A5317E04600F30AD3ED43083820FF516 cert=6LMNcXh6MIfApbZiMksnS4Kj+2sffZ5pybSqtcOO5YoHgfrMpkBJqvLxhuR2Ppau0L2seg iatmode=0
+#Bridge obfs4 [2a0c:4d80:42:702::1]:27015 C5B7CD6946FF10C5B3E89691A7D3F2C122D2117C cert=TD7PbUO0/0k6xYHMPW3vJxICfkMZNdkRrb63Zhl5j9dW3iRGiCx0A7mPhe5T2EDzQ35+Zw iat-mode=0
+#Bridge obfs4 85.31.186.98:443 011F2599C0E9B27EE74B353155E244813763C3E5 cert=ayq0XzCwhpdysn5o0EyDUbmSOx3X/oTEbzDMvczHOdBJKlvIdHHLJGkZARtT4dcBFArPPg iat-mode=0
+
+## Enable built-in meek bridge
+#Bridge meek_lite 0.0.2.0:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
+#Bridge meek_lite 192.0.2.2:2 97700DFE9F483596DDA6264C4D7DF7641E1E39CE url=https://meek.azureedge.net/ front=ajax.aspnetcdn.com
+
+## Enable built-in snowflake bridge
+#Bridge snowflake 0.0.3.0:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72
+Bridge snowflake 192.0.2.3:1 2B280B23E1107BB62ABFC40DDCC8824814F80A72
+
+##

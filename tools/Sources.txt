@@ -1,0 +1,22 @@
+This file outlines where to find the third party tools (tools authored entirely by others) that are used in getTorbrowser.
+
+wget
+https://eternallybored.org/misc/wget/releases/wget-1.21.3-win32.zip
+https://eternallybored.org/misc/wget/releases/wget-1.21.3-win64.zip
+
+curl
+https://curl.se/windows/curl-win32-latest.zip
+https://curl.se/windows/curl-win64-latest.zip
+
+grep
+https://nchc.dl.sourceforge.net/project/grep-for-windows/grep-3.5_win32.zip
+
+tor
+https://dist.torproject.org/torbrowser/11.5/tor-win32-0.4.7.8.zip
+https://dist.torproject.org/torbrowser/11.5/tor-win64-0.4.7.8.zip
+https://dist.torproject.org/torbrowser/11.5/torbrowser-install-11.5_zh-CN.exe
+https://dist.torproject.org/torbrowser/11.5/torbrowser-install-win64-11.5_zh-CN.exe
+
+privoxy:
+https://sourceforge.net/projects/ijbswa/
+https://versaweb.dl.sourceforge.net/project/ijbswa/Win32/3.0.33%20%28stable%29/privoxy_3.0.33.zip
