@@ -127,7 +127,7 @@
 #          config file, because it is used while the config file is
 #          being read.
 #
-#user-manual https://www.privoxy.org/user-manual/
+user-manual /home/linuxbrew/.linuxbrew/Cellar/privoxy/3.0.33/share/doc/privoxy/user-manual/
 #
 #  1.2. trust-info-url
 #  ====================
@@ -259,7 +259,7 @@
 #
 #      No trailing "/", please.
 #
-confdir /usr/local/etc/privoxy
+confdir /home/linuxbrew/.linuxbrew/etc/privoxy
 #
 #  2.2. templdir
 #  ==============
@@ -344,7 +344,7 @@ confdir /usr/local/etc/privoxy
 #
 #      No trailing "/", please.
 #
-logdir /usr/local/var/log/privoxy
+logdir /home/linuxbrew/.linuxbrew/var/log/privoxy
 #
 #  2.5. actionsfile
 #  =================

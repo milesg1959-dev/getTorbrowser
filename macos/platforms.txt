@@ -10,4 +10,4 @@ Windows
 macOS
 Linux
 Android
-TorWindowsExpertBundle
+TorExpertBundle

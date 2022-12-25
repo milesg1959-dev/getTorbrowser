@@ -4,7 +4,7 @@ cd "$(dirname "$0")"
 
 echo ":::::::::::::::::::::::::::::"
 echo ":: getTorbrowser           ::"
-echo ":: 2022.12.03 by Miles Guo ::"
+echo ":: 2022.12.24 by Miles Guo ::"
 echo ":: Use at your own risk.   ::"
 echo ":::::::::::::::::::::::::::::"
 echo
@@ -13,7 +13,7 @@ echo
 echo "Today is: $(date +%Y-%m-%d,%H:%M:%S)"
 echo
 
-echo "First, we need to check whether grep, privoxy and wget commands exist in the system"
+echo "First, we need to check whether privoxy and wget commands exist in the system"
 echo
 
 for cmd in privoxy wget
@@ -33,17 +33,9 @@ echo
 #
 # Set save folder for downloaded files
 #
-DLDST="$PWD/Download/Torbrowser"
-if [ ! -d "$DLDST" ];then
-  mkdir -p -m 700 $DLDST
-fi
-
-#
-# Set data folder for tor
-#
-DATA="$PWD/Data"
-if [ ! -d "$DATA" ];then
-  mkdir -p -m 700 $DATA
+DLDIR="$HOME/Downloads/Torbrowser"
+if [ ! -d "$DLDIR" ];then
+  mkdir -p -m 700 $DLDIR
 fi
 
 #
@@ -76,10 +68,10 @@ do
   if [[ "$site" == "#"* ]];then
     echo -e "\c"
   else
-  DL_URLS[$num]=$site/download/
-  DLT_URLS[$num]=$site/download/tor/
-  DIST_URLS[$num]=$site/dist/torbrowser/
-  num=`expr $num + 1`
+    DL_URLS[$num]=$site/download/
+    DLT_URLS[$num]=$site/download/tor/
+    DIST_URLS[$num]=$site/dist/torbrowser/
+    num=`expr $num + 1`
   fi
 done
 # Restore the original default delimiter of the system
@@ -116,82 +108,8 @@ if [ $TORPRIVOXY -eq 1 ];then
   echo "we decided to select the Torbrowser's official website"
   echo "and start Tor + Privoxy."
   echo
-
-  echo "Get the tor running..."
-  echo
-
-  #
-  # Configuration for tor
-  #
-  TORHOST="127.0.0.1"
-  TORPORT=9050
-  TORCTRLPORT=9051
-
-  # Do not modify these
-  TORRCDEFAULTS="$PWD/TorBrowser/Data/Tor/torrc-defaults"
-  TORRC="$PWD/torrc"
-  TORDATA="$DATA"
-  GEOIP="$PWD/TorBrowser/Data/Tor/geoip"
-  GEOIP6="$PWD/TorBrowser/Data/Tor/geoip6"
-  TOREXEC="$PWD/TorBrowser/Tor/tor.real"
-  TORHASHPASS="16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD"
-  TORLOG="$DATA/torlog.txt"
-
-  cd ./TorBrowser/Tor
-
-  $TOREXEC \
-  --defaults-torrc $TORRCDEFAULTS -f $TORRC \
-  DataDirectory $TORDATA \
-  GeoIPFile $GEOIP \
-  GeoIPv6File $GEOIP6 \
-  HashedControlPassword $TORHASHPASS \
-  +__ControlPort $TORCTRLPORT \
-  +__SocksPort "${TORHOST}:$TORPORT IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" \
-  >$TORLOG 2>&1 &
-
-  echo "Okey, Tor has started."
-  echo
-
-  cd ../..
-
-  echo "Get the privoxy running..."
-  echo
-
-  #
-  # Configuration for privoxy
-  #
-  PRIVOXYCFG="$PWD/config.txt"
-  PRIVOXYLOG="$DATA/privoxylog.txt"
-
-  privoxy --no-daemon $PRIVOXYCFG >$PRIVOXYLOG 2>&1 &
-
-  echo "Okey, Tor + Privoxy has started."
-  echo
-
-  echo "Test $DL_URL again until it can be connected..."
-  echo
-
-  echo "wget -e https_proxy=127.0.0.1:8118 -q -t 1 --spider $DL_URL"
-  wget -e https_proxy=127.0.0.1:8118 -q -t 1 --spider $DL_URL
-
-  until [ $? -eq 0 ];
-  do
-    echo "wget -e https_proxy=127.0.0.1:8118 -q -t 1 --spider $DL_URL"
-    wget -e https_proxy=127.0.0.1:8118 -q -t 1 --spider $DL_URL
-  done
-
-  echo "Okey, now the $DL_URL can be connected."
-  echo
+  . startTorPrivoxy.sh
 fi
-
-echo "Let's Go."
-echo
-
-#
-# Locale, you can change it to your own locale.
-#
-TBLOCALE="zh-CN"
-#TBLOCALE="en-US"
 
 # Save the original default delimiter of the system
 IFS_OLD="$IFS"
@@ -201,16 +119,16 @@ for platform in `cat platforms.txt`
 do
   if [[ "$platform" == "#"* ]];then
     echo -e "\c"
-  elif [[ $platform == TorWindowsExpertBundle ]];then
-    # Tor Windows Expert Bundle
+  elif [[ $platform == TorExpertBundle ]];then
+    # Tor Expert Bundle
     num=0
     for str in `cat $platform.txt`
     do
       if [[ "$str" == "#"* ]];then
         echo -e "\c"
       else
-      para[$num]=$str
-      ((num+=1))
+        para[$num]=$str
+        ((num+=1))
       fi
     done
     num=`expr $num - 1`
@@ -222,14 +140,12 @@ do
     echo
     str=${para[4]//PAT/([^/]+)}
     cutpoint=`expr $((para[5])) + 1`
-#    cutoffchars=`expr $((para[5])) + $((para[6]))`
     cutoffchars=${para[6]}
     if [ $TORPRIVOXY -eq 0 ];then
       wget -q -c -t 0 -O tempa.txt $DLT_URL
     else
       wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -O tempa.txt $DLT_URL
     fi
-#    TVER="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-$cutoffchars)"
     tmpstr="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-)"
     TVER="${tmpstr%$cutoffchars}"
     echo "Current version number is: $TVER"
@@ -238,10 +154,8 @@ do
     echo
     str=${para[7]//PAT/([^/]+)}
     cutpoint=`expr $((para[8])) + 1`
-#    cutoffchars=`expr $((para[8])) + $((para[9]))`
     cutoffchars=${para[9]}
-#    TBVER="$(grep -o -E -m 1 "$str$TVER.zip.asc" tempa.txt | cut -c $cutpoint-$cutoffchars)"
-    tmpstr="$(grep -o -E -m 1 "$str$TVER.zip.asc" tempa.txt | cut -c $cutpoint-)"
+    tmpstr="$(grep -o -E -m 1 "$str$TVER-windows-i686.tar.gz.asc" tempa.txt | cut -c $cutpoint-)"
 	  TBVER="${tmpstr%$cutoffchars}"
     echo "Current path is: $TBVER"
     echo
@@ -251,7 +165,7 @@ do
 
     echo "The downloaded files will be saved in this folder:"
     echo
-    echo "  $DLDST/$TBVER"
+    echo "  $DLDIR/$TBVER"
     echo
 
     for i in $(seq 10 $num)
@@ -260,11 +174,11 @@ do
       echo "Download file $file ..."
       echo
       if [ $TORPRIVOXY -eq 0 ];then
-        echo "wget -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       else
-        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       fi
       echo
     done
@@ -276,8 +190,8 @@ do
       if [[ "$str" == "#"* ]];then
         echo -e "\c"
       else
-      para[$num]=$str
-      ((num+=1))
+        para[$num]=$str
+        ((num+=1))
       fi
     done
     num=`expr $num - 1`
@@ -289,14 +203,12 @@ do
     echo
     str=${para[4]//PAT/([^/]+)}
     cutpoint=`expr $((para[5])) + 1`
-#    cutoffchars=`expr $((para[5])) + $((para[6]))`
     cutoffchars=${para[6]}
     if [ $TORPRIVOXY -eq 0 ];then
       wget -q -c -O tempa.txt $DL_URL
     else
       wget -e https_proxy=127.0.0.1:8118 -q -c -O tempa.txt $DL_URL
     fi
-#    TBVER="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-$cutoffchars)"
     tmpstr="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-)"
 	  TBVER="${tmpstr%$cutoffchars}"
     echo "Current version number is: $TBVER"
@@ -307,7 +219,7 @@ do
 
     echo "The downloaded files will be saved in this folder:"
     echo
-    echo "  $DLDST/$TBVER"
+    echo "  $DLDIR/$TBVER"
     echo
 
     for i in $(seq 7 $num)
@@ -316,11 +228,11 @@ do
       echo "Download file $file ..."
       echo
       if [ $TORPRIVOXY -eq 0 ];then
-        echo "wget -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       else
-        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       fi
       echo
     done
@@ -332,8 +244,8 @@ do
       if [[ "$str" == "#"* ]];then
         echo -e "\c"
       else
-      para[$num]=$str
-      ((num+=1))
+        para[$num]=$str
+        ((num+=1))
       fi
     done
     num=`expr $num - 1`
@@ -345,14 +257,12 @@ do
     echo
     str=${para[4]//PAT/([^/]+)}
     cutpoint=`expr $((para[5])) + 1`
-#    cutoffchars=`expr $((para[5])) + $((para[6]))`
     cutoffchars=${para[6]}
     if [ $TORPRIVOXY -eq 0 ];then
       wget -q -c -O tempa.txt $DL_URL
     else
       wget -e https_proxy=127.0.0.1:8118 -q -c -O tempa.txt $DL_URL
     fi
-#    TBVER="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-$cutoffchars)"
     tmpstr="$(grep -o -E -m 1 "$str" tempa.txt | cut -c $cutpoint-)"
 	  TBVER="${tmpstr%$cutoffchars}"
     echo "Current version number is: $TBVER"
@@ -363,21 +273,20 @@ do
 
     echo "The downloaded files will be saved in this folder:"
     echo
-    echo "  $DLDST/$TBVER"
+    echo "  $DLDIR/$TBVER"
     echo
 
     for i in $(seq 7 $num)
     do
       file=${para[i]//TBVER/$TBVER}
-      file=${file//TBLOCALE/$TBLOCALE}
       echo "Download file $file ..."
       echo
       if [ $TORPRIVOXY -eq 0 ];then
-        echo "wget -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       else
-        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file"
-        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDST/$TBVER $DIST_URL$TBVER/$file
+        echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+        wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
       fi
       echo
     done
@@ -396,12 +305,12 @@ else
   echo "We need to kill Tor + Privoxy."
   echo
   killall -9 privoxy > /dev/null 2>&1
-  killall -9 tor.real > /dev/null 2>&1
+  killall -9 tor > /dev/null 2>&1
   echo
   echo "Bye!"
   echo
 fi
-exit
+
 ######################test only######################
 #read -p "press any key to exit..."
 #exit
