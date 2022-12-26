@@ -1,0 +1,47 @@
+#
+# This is the config file, and
+# a '#' character indicates
+# a comment
+#
+# display platform
+::::::::::::::::::::::::::::::::::::
+:: Download the Tor Expert Bundle ::
+::::::::::::::::::::::::::::::::::::
+Tor Windows Expert Bundle
+# match patten PAT ==> 12.0.1
+# old tor-win32-PAT.zip.asc
+# new tor-expert-bundle-PAT-windows-i686.tar.gz.asc
+tor-expert-bundle-PAT-windows-i686.tar.gz.asc
+# cut-point
+18
+# cutoff-chars
+-windows*
+# match patten
+dist/torbrowser/PAT/tor-expert-bundle-
+# cut-point
+16
+# cutoff-chars
+/tor-*
+# download list
+sha256sums-signed-build.txt
+sha256sums-signed-build.txt.asc
+tor-expert-bundle-TVER-windows-i686.tar.gz
+tor-expert-bundle-TVER-windows-i686.tar.gz.asc
+tor-expert-bundle-TVER-windows-x86_64.tar.gz
+tor-expert-bundle-TVER-windows-x86_64.tar.gz.asc
+tor-expert-bundle-TVER-macos-x86_64.tar.gz
+tor-expert-bundle-TVER-macos-x86_64.tar.gz.asc
+tor-expert-bundle-TVER-macos-aarch64.tar.gz
+tor-expert-bundle-TVER-macos-aarch64.tar.gz.asc
+tor-expert-bundle-TVER-linux-i686.tar.gz
+tor-expert-bundle-TVER-linux-i686.tar.gz.asc
+tor-expert-bundle-TVER-linux-x86_64.tar.gz
+tor-expert-bundle-TVER-linux-x86_64.tar.gz.asc
+tor-expert-bundle-TVER-android-x86.tar.gz
+tor-expert-bundle-TVER-android-x86.tar.gz.asc
+tor-expert-bundle-TVER-android-x86_64.tar.gz
+tor-expert-bundle-TVER-android-x86_64.tar.gz.asc
+tor-expert-bundle-TVER-android-armv7.tar.gz
+tor-expert-bundle-TVER-android-armv7.tar.gz.asc
+tor-expert-bundle-TVER-android-aarch64.tar.gz
+tor-expert-bundle-TVER-android-aarch64.tar.gz.asc
