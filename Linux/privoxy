@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+
+# File        :  privoxy
+#
+# Purpose     :  A Privoxy Enhancing Proxy launch/terminate/... script
+#
+# Copyright   :  Written by and Copyright (C) 2023-03-17
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+cd "$(dirname "$0")"
+
+usage() {
+  cat <<EOF
+Usage: $0 {start|stop|restart}
+EOF
+  exit 1
+}
+
+[ $# -ne 1 ] && usage
+
+. rc.common
+
+BASENAME=`basename $0`
+# check privoxy
+BINPATH=/usr/local/sbin
+BINFILE=$BINPATH/$BASENAME
+if [ ! -x $BINFILE ]; then
+  echo "Sorry, you haven't installed $BASENAME yet."
+  echo "Please refer to the readme.md for the solution."
+  exit 1
+fi
+
+CFGFILE=$PWD/$BASENAME.cfg
+[ -f $CFGFILE ] || exit 1
+data_dir=$PWD/run/$BASENAME
+PIDFILE=$data_dir/$BASENAME.pid
+
+RETVAL=0
+
+start() {
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME is already running."
+    return 0
+  fi
+
+  if [ ! -d "$data_dir" ]; then
+    echo "Creating directory $data_dir"
+    mkdir -p -m 700 "$data_dir"
+  fi
+
+  echo "Starting $BASENAME enhancing proxy."
+#  $BINFILE --no-daemon --pidfile $PIDFILE $CFGFILE >$LOGFILE 2>&1 &
+  $BINFILE --no-daemon --pidfile $PIDFILE $CFGFILE 2>/dev/null &
+  RETVAL=$?
+  echo
+  return $RETVAL
+}
+
+stop() {
+  if [ -e $PIDFILE ]; then
+    echo "Shutting down $BASENAME."
+    pid=$(GetPID $BASENAME)
+    kill -TERM "$pid"
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $PIDFILE
+    return $RETVAL
+  else
+    echo "$BASENAME is not running."
+    return 0
+  fi
+}
+
+restart() {
+  if [ -e $PIDFILE ]; then
+    echo "Restarting $BASENAME enhancing proxy."
+    pid=$(GetPID $BASENAME)
+    kill -HUP "$pid"
+    RETVAL=$?
+    echo
+    return $RETVAL
+  else
+    stop
+    start
+  fi
+}
+
+##
+# Generic action handler
+##
+case "$1" in
+  start   ) start;;
+  stop    ) stop;;
+  restart ) restart;;
+  *       ) usage;;
+esac
+ 
+exit $?
+
+## End of privoxy

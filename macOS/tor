@@ -1,0 +1,314 @@
+#!/usr/bin/env bash
+
+# File        :  tor
+#
+# Purpose     :  A Tor(onion routers) launch/terminate/... script
+#
+# Copyright   :  Written by and Copyright (C) 2023-03-17
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+## From Tor control protocol (Version 1)
+
+## SIGNAL
+
+#  Sent from the client to the server. The syntax is:
+
+#  "SIGNAL" SP Signal CRLF
+
+#  Signal = "RELOAD" / "SHUTDOWN" / "DUMP" / "DEBUG" / "HALT" /
+#           "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM" /
+#           "CLEARDNSCACHE" / "HEARTBEAT" / "ACTIVE" / "DORMANT"
+#
+#  The meaning of the signals are:
+
+#      RELOAD    -- Reload: reload config items.
+#      SHUTDOWN  -- Controlled shutdown: if server is an OP, exit immediately.
+#                   If it's an OR, close listeners and exit after
+#                   ShutdownWaitLength seconds.
+#      DUMP      -- Dump stats: log information about open connections and
+#                   circuits.
+#      DEBUG     -- Debug: switch all open logs to loglevel debug.
+#      HALT      -- Immediate shutdown: clean up and exit now.
+#      CLEARDNSCACHE -- Forget the client-side cached IPs for all hostnames.
+#      NEWNYM    -- Switch to clean circuits, so new application requests
+#                   don't share any circuits with old ones.  Also clears
+#                   the client-side DNS cache.  (Tor MAY rate-limit its
+#                   response to this signal.)
+#      HEARTBEAT -- Make Tor dump an unscheduled Heartbeat message to log.
+#      DORMANT   -- Tell Tor to become "dormant".  A dormant Tor will
+#                   try to avoid CPU and network usage until it receives
+#                   user-initiated network request.  (Don't use this
+#                   on relays or hidden services yet!)
+#      ACTIVE    -- Tell Tor to stop being "dormant", as if it had received
+#                   a user-initiated network request.
+
+#  The server responds with "250 OK" if the signal is recognized (or simply
+#  closes the socket if it was asked to close immediately), or "552
+#  Unrecognized signal" if the signal is unrecognized.
+
+#  Note that not all of these signals have POSIX signal equivalents.  The
+#  ones that do are as below.  You may also use these POSIX names for the
+#  signal that have them.
+
+#      RELOAD: HUP
+#      SHUTDOWN: INT
+#      HALT: TERM
+#      DUMP: USR1
+#      DEBUG: USR2
+
+#  [SIGNAL DORMANT and SIGNAL ACTIVE were added in 0.4.0.1-alpha.]
+
+cd "$(dirname "$0")"
+
+usage() {
+  cat <<EOF
+Usage: $0 {start|stop|reload|cleardnscache|newnym|dormant|active}
+
+The meaning of the signals are:
+  start         -- Start Tor service.
+  stop          -- Shutdown Tor service.
+  reload        -- Reload config items.
+  cleardnscache -- Forget the client-side cached IPs for all hostnames.
+  newnym        -- Switch to clean circuits, so new application requests
+                   don't share any circuits with old ones.  Also clears
+                   the client-side DNS cache.  (Tor MAY rate-limit its
+                   response to this signal.)
+  dormant       -- Tell Tor to become "dormant".  A dormant Tor will
+                   try to avoid CPU and network usage until it receives
+                   user-initiated network request.  (Don't use this
+                   on relays or hidden services yet!)
+  active        -- Tell Tor to stop being "dormant", as if it had received
+                   a user-initiated network request.
+EOF
+  exit 1
+}
+
+[ $# -ne 1 ] && usage
+
+BASENAME=`basename $0`
+
+# check nc
+NCPATH=/usr/bin
+NCBIN=$NCPATH/nc
+if [ ! -x $NCBIN ]; then
+  echo "Sorry, I can't find nc, that is used to communicate with Tor process."
+  echo "The control signals needs to be send via nc/netcat."
+  echo "Please refer to the readme.md for the solution."
+  exit 1
+fi
+
+# check tor
+TEBPATH=$PWD/tor-expert-bundle
+TORPATH=$TEBPATH/$BASENAME
+TORBIN=$TORPATH/$BASENAME
+if [ ! -x $TORBIN ]; then
+  echo "Sorry, I can't find $BASENAME."
+  echo "Please refer to the readme.md to download and install the Tor Expert Bundle first."
+  exit 1
+fi
+
+TOR_TORRC=$PWD/torrc
+[ -f $TOR_TORRC ] || exit 1
+TOR_GEOIP=$TEBPATH/data/geoip
+TOR_GEOIP6=$TEBPATH/data/geoip6
+
+TOR_HOST="127.0.0.1"
+TOR_BASE_SOCKS_PORT=9050
+TOR_BASE_CTRL_PORT=9051
+TOR_HASHPASS="16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD"
+TOR_PASS="toralone"
+
+RUNPATH=$PWD/run
+
+RETVAL=0
+
+start() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  LOGFILE=$RUNPATH/$BASENAME/$BASENAME.log
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME is already running."
+    RETVAL=0
+    echo
+  else
+    data_dir=$RUNPATH/$BASENAME
+    if [ ! -d "$data_dir" ]; then
+      echo "Creating directory $data_dir"
+      mkdir -p -m 700 "$data_dir"
+    fi
+    socks_port=$((TOR_BASE_SOCKS_PORT))
+    control_port=$((TOR_BASE_CTRL_PORT))
+    echo "Starting $BASENAME"
+    OLDPATH=$PWD
+    cd $TORPATH
+    $TORBIN --PidFile $PIDFILE -f $TOR_TORRC --DataDirectory $data_dir --GeoIPFile $TOR_GEOIP --GeoIPv6File $TOR_GEOIP6 --HashedControlPassword $TOR_HASHPASS --NewCircuitPeriod 60 --ControlPort $control_port --SocksPort "$TOR_HOST:$socks_port IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" >$LOGFILE 2>&1 &
+    RETVAL=$?
+    echo
+    cd $OLDPATH
+  fi
+  return $RETVAL
+}
+
+stop() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  LOGFILE=$RUNPATH/$BASENAME/$BASENAME.log
+  if [ -e $PIDFILE ]; then
+    echo "Shutting down $BASENAME"
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL SHUTDOWN
+QUIT
+EOF
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $PIDFILE
+    [ $RETVAL -eq 0 ] && rm -f $LOGFILE
+  else
+    echo "$BASENAME is not running."
+    RETVAL=0
+    echo
+  fi
+  return $RETVAL
+}
+
+reload() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME: reload config items."
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL RELOAD
+QUIT
+EOF
+    RETVAL=$?
+    echo
+  else
+    echo "$BASENAME is not running."
+    RETVAL=1
+    echo
+  fi
+  return $RETVAL
+}
+
+cleardnscache() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME: Forget the client-side cached IPs for all hostnames."
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL CLEARDNSCACHE
+QUIT
+EOF
+    RETVAL=$?
+    echo
+  else
+    echo "$BASENAME is not running."
+    RETVAL=1
+    echo
+  fi
+  return $RETVAL
+}
+
+newnym() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME: Switch to clean circuits."
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL NEWNYM
+QUIT
+EOF
+    RETVAL=$?
+    echo
+    sleep 10
+  else
+    echo "$BASENAME is not running."
+    RETVAL=1
+    echo
+  fi
+  return $RETVAL
+}
+
+dormant() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME: To become dormant."
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL DORMANT
+QUIT
+EOF
+    RETVAL=$?
+    echo
+  else
+    echo "$BASENAME is not running."
+    RETVAL=1
+    echo
+  fi
+  return $RETVAL
+}
+
+active() {
+  PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
+  if [ -e $PIDFILE ]; then
+    echo "$BASENAME: To stop being dormant."
+    control_port=$((TOR_BASE_CTRL_PORT))
+    $NCBIN $TOR_HOST $control_port << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL ACTIVE
+QUIT
+EOF
+    RETVAL=$?
+    echo
+  else
+    echo "$BASENAME is not running."
+    RETVAL=1
+    echo
+  fi
+  return $RETVAL
+}
+
+##
+# Generic action handler
+##
+case "$1" in 
+  start         ) start;;
+  reload        ) reload;;
+  stop          ) stop;;
+  cleardnscache ) cleardnscache;;
+  newnym        ) newnym;;
+  dormant       ) dormant;;
+  active        ) active;;
+  *             ) usage;;
+esac
+
+exit $?
+
+## End of tor

@@ -1,13 +1,8 @@
+# The '#' character represents a comment
 #
-# This is the config file, and
-# a '#' character indicates
-# a comment
-#
-# Each line of this file represents TB's operating platform
-# You can use '#' to comment out the platforms you don't need
-#
+# You can use '#' to comment out content you don't need
 Windows
 macOS
 Linux
 Android
-TorExpertBundle
+# TorExpertBundle ; since 20230403, we don't need it

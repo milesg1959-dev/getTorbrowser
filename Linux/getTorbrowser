@@ -1,0 +1,338 @@
+#!/usr/bin/env bash
+
+# File        :  getTorbrowser
+#
+# Purpose     :  A latest version of Tor Browser/Tor Expert Bundle download script
+#
+# Copyright   :  Written by and Copyright (C) 2023-04-03
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+cd "$(dirname "$0")"
+
+# check wget
+WGETPATH=/usr/local/bin
+WGETBIN=$WGETPATH/wget
+if [ ! -x $WGETBIN ]; then
+  echo "Sorry, I can't find wget, that is used to download the Torbrowser."
+  echo "Please refer to the readme.md for the solution."
+  exit 1
+fi
+
+#
+# Select to download Torbrowser or Tor Expert Bundle
+#
+quitmenu="false"
+until [ "$quitmenu" == "true" ];
+do
+  echo "First, please select whether you want to download Torbrowser or Tor Expert Bundle"
+  echo
+  PS3="Make your choice [1..3]: "
+  select fav in "Torbrowser" "Tor Expert Bundle" "Quit"; do
+    case $fav in
+	    "Torbrowser")
+        echo
+	      echo "Okay, you chose to download $fav."
+        echo
+        tborteb="tb"
+        tbortebTITLE="Torbrowser"
+        quitmenu="true"
+        break
+	      ;;
+	    "Tor Expert Bundle")
+        echo
+	      echo "Okay, you chose to download $fav."
+        echo
+        tborteb="teb"
+        tbortebTITLE="Tor Expert Bundle"
+        quitmenu="true"
+        break
+	      ;;
+	    "Quit")
+        echo
+	      echo "Okay, you chose to quit. Bye!"
+        echo
+        exit
+	      ;;
+      *)
+        echo
+        echo "invalid option $REPLY, try again!"
+        echo
+        break
+        ;;
+    esac
+  done
+done
+
+#
+# The torproject download site.
+#
+# Torbrowser's official website
+# It may be necessary to run Tor + Privoxy to connect
+# https://www.torproject.org/download/
+# https://www.torproject.org/download/tor/
+# https://dist.torproject.org/torbrowser/11.0.15/
+# https://archive.torproject.org/tor-package-archive/torbrowser/12.0.4/
+#
+# Torbrowser's mirror site
+# It seems that we can connect without running Tor + Privoxy (Recommended for use in China)
+# https://tor.calyxinstitute.org/download/
+# https://tor.calyxinstitute.org/download/tor/
+# https://tor.calyxinstitute.org/dist/torbrowser/11.0.15/
+#
+#set TEST_URL=https://aus1.torproject.org/torbrowser/update_3/release/downloads.json
+
+# Save the original default delimiter of the system
+IFS_OLD="${IFS}"
+# Set new delimiter
+IFS=$'\r\n'
+num=0
+for site in `cat sites.txt`
+do
+  [[ "$site" == "#"* ]] && {
+    echo -e "\c"
+  } || {
+    URLS[$num]=${site}
+    num=`expr $num + 1`
+  }
+done
+# Restore the original default delimiter of the system
+IFS=${IFS_OLD}
+
+#
+# Select the download site
+#
+quitmenu="false"
+options=`expr $num + 1`
+until [ "$quitmenu" == "true" ];
+do
+  echo "Now, you need to select the download site."
+  echo
+  PS3="Make your choice from the list [1..$options]: "
+  select fav in "${URLS[@]}" "Quit"; do
+    [ $REPLY -ge 1 -a $REPLY -le $num ] && {
+      echo
+      echo "Okay, the site you chose is $fav."
+      echo
+      quitmenu="true"
+      break
+    } || {
+      case $fav in
+	      "Quit")
+          echo
+	        echo "Okay, you chose to quit. Bye!"
+          echo
+          exit
+	        ;;
+        *)
+          echo
+          echo "invalid option $REPLY, try again!"
+          echo
+          break
+          ;;
+      esac
+    }
+  done
+done
+
+[ "$tborteb" == "tb" ] && {
+  DL_URL=${fav}/download/
+} || {
+  DL_URL=${fav}/download/tor/
+}
+DIST_URL=${fav}/dist/torbrowser/
+
+echo "Let's try whether $DL_URL can connect..."
+echo
+
+echo "wget -q -t 1 --spider $DL_URL"
+wget -q -t 1 --spider $DL_URL
+  
+[ $? -eq 0 ] && {
+  echo
+  echo "Yes, the $DL_URL can be connected."
+  echo
+  TORPRIVOXY=0
+} || {
+  echo
+  echo "No, the $DL_URL can't connect."
+  echo
+  TORPRIVOXY=1
+}
+
+#
+# Set save folder for downloaded files
+#
+DLDIR=$HOME/Downloads/Torbrowser
+if [ ! -d $DLDIR ]; then
+  mkdir -p -m 700 $DLDIR
+fi
+
+[ $TORPRIVOXY -eq 1 ] && {
+  echo "Since the site could not connect normally,"
+  echo "we decided to start Tor & Privoxy."
+  echo
+  ./tor start
+  ./privoxy start
+#  ./mtor 5 start
+#  ./haproxy start
+#  ./privoxy start
+}
+
+# Save the original default delimiter of the system
+IFS_OLD="${IFS}"
+# Set new delimiter
+IFS=$'\r\n'
+num=0
+for platform in `cat platforms.txt`
+do
+  [[ "$platform" == "#"* ]] && {
+    echo -e "\c"
+  } || {
+    PLATFORMS[$num]=$platform
+    num=`expr $num + 1`
+  }
+done
+# Restore the original default delimiter of the system
+IFS=${IFS_OLD}
+
+#
+# Select the platform
+#
+quitmenu="false"
+options=`expr $num + 1`
+until [ "${quitmenu}" == "true" ];
+do
+  echo "Now, you can choose the $tbortebTITLE for ..."
+  echo
+  PS3="Make your choice from the list [1..$options]: "
+  select fav in "${PLATFORMS[@]}" "Quit"; do
+    [ $REPLY -ge 1 -a $REPLY -le $num ] && {
+      echo
+      echo "Okay, the platform you chose is $fav."
+      echo
+
+      # Save the original default delimiter of the system
+      IFS_OLD="${IFS}"
+      # Set new delimiter
+      IFS=$'\r\n'
+      i=0
+      for str in `cat $tborteb$fav.txt`
+      do
+        [[ "$str" == "#"* ]] && {
+          echo -e "\c"
+        } || {
+          para[$i]=$str
+          i=`expr $i + 1`
+        }
+      done
+      i=`expr $i - 1`
+      # Restore the original default delimiter of the system
+      IFS=${IFS_OLD}
+
+      echo "${para[0]}"
+      echo "${para[1]}"
+      echo "${para[2]}"
+      echo
+      echo "Get the current version number of the ${para[3]} from $DL_URL"
+      echo
+      str=${para[4]//PAT/([^/]+)}
+      cutpoint=`expr $((para[5])) + 1`
+      cutoffchars=${para[6]}
+      [ $TORPRIVOXY -eq 0 ] && {
+        wget -q -c -O tempa.txt $DL_URL
+      } || {
+        wget -e https_proxy=127.0.0.1:8118 -q -c -O tempa.txt $DL_URL
+      }
+      tmpstr="$(grep -o -E -m 1 "${str}" tempa.txt | cut -c ${cutpoint}-)"
+	    TBVER="${tmpstr%$cutoffchars}"
+      echo "Current version number is: $TBVER"
+      echo
+      if [ -e tempa.txt ]; then
+        rm -rf tempa.txt
+      fi
+
+      echo "The downloaded files will be saved in this folder:"
+      echo
+      echo "  $DLDIR/$TBVER"
+      echo
+
+      for i in $(seq 7 $i)
+      do
+        file=${para[i]//TBVER/${TBVER}}
+        echo "Download file $file ..."
+        echo
+        [ $TORPRIVOXY -eq 0 ] && {
+          echo "wget -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+          wget -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
+        } || {
+          echo "wget -e https_proxy=127.0.0.1:8118 -q -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file"
+          wget -e https_proxy=127.0.0.1:8118 -c -t 0 -P $DLDIR/$TBVER $DIST_URL$TBVER/$file
+        }
+        echo
+      done
+      echo "Okey, All files have been downloaded. Enjoy!"
+      echo
+      break
+    } || {
+      case $fav in
+	      "Quit")
+          echo
+	        echo "Okay, you chose to quit."
+          echo
+          quitmenu="true"
+	        break
+	        ;;
+        *)
+          echo "invalid option $REPLY, try again!"
+          echo
+          break
+          ;;
+      esac
+    }
+  done
+done
+
+[ $TORPRIVOXY -eq 0 ] && {
+  echo "Bye!"
+  echo
+} || {
+  echo "We need to kill Tor & Privoxy."
+  echo
+  ./privoxy stop
+  ./tor stop
+#  ./privoxy stop
+#  ./haproxy stop
+#  ./mtor 5 stop
+  echo "Bye!"
+  echo
+}
+
+## End of getTorbrowser
+######################test only######################
+#read -p "press any key to exit..."
+#exit
+######################test only######################
+##

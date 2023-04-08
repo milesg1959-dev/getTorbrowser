@@ -1,12 +1,8 @@
-#
-# This is the config file, and
-# a '#' character indicates
-# a comment
-#
-# Each line of this file represents TB's official/mirror website
-# You can use '#' to comment out some sites you don't need.
+# The '#' character represents a comment
 #
 # Torbrowser's mirror website (Recommended for use in China)
+# You can use '#' to comment out content you don't need
+https://tor.calyxinstitute.org
 https://tor.ybti.net
 https://tormirror.tb-itf-tor.de
 https://torproject.ph3x.at
@@ -14,7 +10,7 @@ https://www.eprci.com/tor
 https://tor.eprci.net
 https://cyberside.net.ee/sibul
 https://tormirror.tb-itf-tor.de
-https://tor.calyxinstitute.org
 https://tor.eff.org
 # Torbrowser's official website
 https://www.torproject.org
+#
