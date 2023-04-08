@@ -1,0 +1,20 @@
+# The '#' character represents a comment
+#
+# display platform
+:::::::::::::::::::::::::::::::::::::::
+:: Download the Torbrowser for macOS ::
+:::::::::::::::::::::::::::::::::::::::
+Torbrowser for macOS
+# match patten PAT ==> 12.0.1
+TorBrowser-PAT-macos_ALL.dmg.asc
+# cut point
+11
+# cut off
+-macos*
+# download list
+# You can use '#' to comment out content you don't need
+sha256sums-signed-build.txt
+sha256sums-signed-build.txt.asc
+TorBrowser-TBVER-macos_ALL.dmg
+TorBrowser-TBVER-macos_ALL.dmg.asc
+#

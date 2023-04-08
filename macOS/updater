@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+
+# File        :  updater
+#
+# Purpose     :  A local Tor Expert Bundle update script
+#
+# Copyright   :  Written by and Copyright (C) 2023-04-05
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+cd "$(dirname "$0")"
+
+platform=`uname -m`
+[ $platform='x86_64' ] && {
+  TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-macos-x86_64.tar.gz
+} || {
+  TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-macos-aarch64.tar.gz
+}
+
+TEB_PATH=$PWD/tor-expert-bundle
+
+echo "First, I need to find a Tor Expert Bundle package..."
+echo
+
+for file in `ls -Rrt $TEBP_FILE 2>/dev/null`
+do
+  echo -e ". \c"
+done
+echo
+echo
+
+[ -e $file ] && {
+  echo "I found some Tor Expert Bundle packages, the lastest one of which is:"
+  echo
+  echo "  $file"
+  echo
+} || {
+  echo "Sorry, I didn't find the Tor Expert Bundle package."
+  echo "Please use the getTorbrowser script to download a Tor Expert Bundle package first."
+  exit
+}
+
+echo "Now we need to determine whether this is the updated version of Tor Expert Bundle we need."
+echo
+
+TEBP_VER=${file##*/}
+TEBP_VER=${TEBP_VER:18}
+TEBP_VER=${TEBP_VER%-macos*}
+echo "Tor Expert Bundle package version number is: $TEBP_VER"
+echo
+
+TEBVER_FILE=$TEB_PATH/teb_version
+for str in `cat "$TEBVER_FILE"`
+do
+  TEB_VER="$str"
+done
+echo "Your Tor Expert Bundle version number is: $TEB_VER"
+echo
+
+if [ $TEBP_VER == $TEB_VER -o $TEBP_VER \< $TEB_VER ]; then
+  echo "Your Tor Expert Bundle no need update."
+  echo
+  exit
+fi
+
+BAKDIR="${PWD}/Update/$(date +%Y%m%d%H%M)_bak"
+[ -d $BAKDIR ] && {
+  rm -rf $BAKDIR
+}
+[ ! -d $BAKDIR ] && {
+  mkdir -p -m 755 $BAKDIR
+}
+
+echo "Your Tor Expert Bundle needs to be updated, please wait ..."
+echo
+echo "Backup old files to $BAKDIR ..."
+echo
+mv -f $TEB_PATH $BAKDIR
+echo "Copy new file ..."
+echo
+mkdir -p -m 755 $TEB_PATH
+tar -xvf $file -C $TEB_PATH
+cat <<EOF > "$TEB_PATH/teb_version"
+$TEBP_VER
+EOF
+echo "Done."
+echo
+echo "Update completed. Enjoy!"
+echo
+
+## End of updater
+######################test only######################
+#read -p "press any key to exit..."
+#exit
+######################test only######################
+#

@@ -1,0 +1,22 @@
+# The '#' character represents a comment
+#
+# display platform
+::::::::::::::::::::::::::::::::::::::::::::::::
+:: Download the Tor Expert Bundle for Windows ::
+::::::::::::::::::::::::::::::::::::::::::::::::
+Tor Expert Bundle for Windows
+# match patten PAT ==> 12.0.1
+tor-expert-bundle-PAT-windows-i686.tar.gz.asc
+# cut point
+18
+# cut off
+-windows*
+# download list
+# You can use '#' to comment out content you don't need
+sha256sums-signed-build.txt
+sha256sums-signed-build.txt.asc
+tor-expert-bundle-TBVER-windows-i686.tar.gz
+tor-expert-bundle-TBVER-windows-i686.tar.gz.asc
+tor-expert-bundle-TBVER-windows-x86_64.tar.gz
+tor-expert-bundle-TBVER-windows-x86_64.tar.gz.asc
+#

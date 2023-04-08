@@ -1,0 +1,22 @@
+# The '#' character represents a comment
+#
+# display platform
+:::::::::::::::::::::::::::::::::::::::::
+:: Download the Torbrowser for Windows ::
+:::::::::::::::::::::::::::::::::::::::::
+Torbrowser for Windows
+# match patten PAT ==> 12.0.1
+torbrowser-install-win64-PAT_ALL.exe.asc
+# cut point
+25
+# cut off
+_ALL*
+# download list
+# You can use '#' to comment out content you don't need
+sha256sums-signed-build.txt
+sha256sums-signed-build.txt.asc
+torbrowser-install-TBVER_ALL.exe
+torbrowser-install-TBVER_ALL.exe.asc
+torbrowser-install-win64-TBVER_ALL.exe
+torbrowser-install-win64-TBVER_ALL.exe.asc
+#
