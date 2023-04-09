@@ -1,6 +1,7 @@
 (Note: Third-party tools licenses, please refer to their respective licenses.)
 
-getTorbrowser, Copyright (C) 2022-7-16 Miles Guo. <komg AT hotmail.com>
+getTorbrowser, updater, tor, mtor, haproxy, privoxy
+Copyright (C) 2022-2023 Miles Guo. <komg AT hotmail.com>
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
