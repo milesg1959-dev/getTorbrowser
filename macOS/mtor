@@ -4,7 +4,7 @@
 #
 # Purpose     :  A Multiple Tor(onion routers) launch/terminate/... script
 #
-# Copyright   :  Written by and Copyright (C) 2023-03-15
+# Copyright   :  Written by and Copyright (C) 2023-04-26
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -107,33 +107,42 @@ EOF
   exit 1
 }
 
-[ $# -ne 2 ] && usage
+[[ $# -ne 2 ]] && usage
+
+expr $1 + 0 >/dev/null 2>&1
+[[ $? -ne 0 ]] && usage
 
 TOR_INSTANCES="$1"
-#TOR_SIGNAL="$2"
+TOR_SIGNAL="$2"
 
 # check nc
 NCPATH=/usr/bin
 NCBIN=$NCPATH/nc
-if [ ! -x $NCBIN ]; then
+[[ ! -x $NCBIN ]] && {
   echo "Sorry, I can't find nc, that is used to communicate with Tor process."
   echo "The control signals needs to be send via nc/netcat."
   echo "Please refer to the readme.md for the solution."
+  echo
   exit 1
-fi
+}
 
 # check tor
 TEBPATH=$PWD/tor-expert-bundle
 TORPATH=$TEBPATH/tor
 TORBIN=$TORPATH/tor
-if [ ! -x $TORBIN ]; then
-  echo "Sorry, I can't find tor."
+[[ ! -x $TORBIN ]] && {
+  echo "Sorry, I can't find $TORBIN."
   echo "Please refer to the readme.md to download and install the Tor Expert Bundle first."
+  echo
   exit 1
-fi
+}
 
-TOR_TORRC=$PWD/torrc
-[ -f $TOR_TORRC ] || exit 1
+TOR_TORRC=$PWD/torrc.cfg
+[[ -f $TOR_TORRC ]] || {
+  echo "Sorry, I can't find torrc, that is used to with Tor process."
+  echo
+  exit 1
+}
 TOR_GEOIP=$TEBPATH/data/geoip
 TOR_GEOIP6=$TEBPATH/data/geoip6
 
@@ -148,46 +157,48 @@ RUNPATH=$PWD/run
 RETVAL=0
 mRETVAL=0
 
-start() {
+start () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
     LOGFILE=$RUNPATH/tor$i/tor$i.log
-    if [ -e $PIDFILE ]; then
+    [[ -e $PIDFILE ]] && {
       echo "tor$i is already running."
-      mRETVAL=0
       echo
-    else
+      mRETVAL=0
+    } || {
       data_dir=$RUNPATH/tor$i
-      if [ ! -d "$data_dir" ]; then
-        echo "Creating directory $data_dir"
-        mkdir -p -m 700 "$data_dir"
-      fi
+      [[ ! -d "$data_dir" ]] && mkdir -p -m 700 "$data_dir" >/dev/null 2>&1
       socks_port=$((TOR_BASE_SOCKS_PORT+$i))
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       echo "Starting tor$i"
+      echo
       OLDPATH=$PWD
       cd $TORPATH
       $TORBIN --PidFile $PIDFILE -f $TOR_TORRC --DataDirectory $data_dir --GeoIPFile $TOR_GEOIP --GeoIPv6File $TOR_GEOIP6 --HashedControlPassword $TOR_HASHPASS --NewCircuitPeriod 60 --ControlPort $control_port --SocksPort "$TOR_HOST:$socks_port IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" >$LOGFILE 2>&1 &
       mRETVAL=$?
-      echo
       cd $OLDPATH
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-stop() {
+stop () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
     LOGFILE=$RUNPATH/tor$i/tor$i.log
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=0
+    } || {
       echo "Shutting down tor$i"
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -195,27 +206,27 @@ SIGNAL SHUTDOWN
 QUIT
 EOF
       mRETVAL=$?
-      echo
-      [ $mRETVAL -eq 0 ] && rm -f $PIDFILE
-      [ $mRETVAL -eq 0 ] && rm -f $LOGFILE
-    else
-      echo "tor$i is not running."
-      mRETVAL=0
-      echo
-    fi
+      [[ $mRETVAL -eq 0 ]] && rm -f $PIDFILE >/dev/null 2>&1
+      [[ $mRETVAL -eq 0 ]] && rm -f $LOGFILE >/dev/null 2>&1
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-reload() {
+reload () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=1
+    } || {
       echo "tor$i: reload config items."
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -223,25 +234,25 @@ SIGNAL RELOAD
 QUIT
 EOF
       mRETVAL=$?
-      echo
-    else
-      echo "tor$i is not running."
-      mRETVAL=1
-      echo
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-cleardnscache() {
+cleardnscache () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=1
+    } || {
       echo "tor$i: Forget the client-side cached IPs for all hostnames."
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -249,25 +260,25 @@ SIGNAL CLEARDNSCACHE
 QUIT
 EOF
       mRETVAL=$?
-      echo
-    else
-      echo "tor$i is not running."
-      mRETVAL=1
-      echo
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-newnym() {
+newnym () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=1
+    } || {
       echo "tor$i: Switch to clean circuits."
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -275,26 +286,26 @@ SIGNAL NEWNYM
 QUIT
 EOF
       mRETVAL=$?
-      echo
       sleep 10
-    else
-      echo "tor$i is not running."
-      mRETVAL=1
-      echo
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-dormant() {
+dormant () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=1
+    } || {
       echo "tor$i: To become dormant."
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$i))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -302,25 +313,25 @@ SIGNAL DORMANT
 QUIT
 EOF
       mRETVAL=$?
-      echo
-    else
-      echo "tor$i is not running."
-      mRETVAL=1
-      echo
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
   return $RETVAL
 }
 
-active() {
+active () {
   num=`expr $TOR_INSTANCES - 0`
   for i in $(seq 1 $num)
   do
     PIDFILE=$RUNPATH/tor$i/tor$i.pid
-    if [ -e $PIDFILE ]; then
+    [[ ! -e $PIDFILE ]] && {
+      echo "tor$i is not running."
+      echo
+      mRETVAL=1
+    } || {
       echo "tor$i: To stop being dormant."
+      echo
       control_port=$((TOR_BASE_CTRL_PORT+$1))
       $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
@@ -328,12 +339,7 @@ SIGNAL ACTIVE
 QUIT
 EOF
       mRETVAL=$?
-      echo
-    else
-      echo "tor$i is not running."
-      mRETVAL=1
-      echo
-    fi
+    }
     RETVAL=`expr $RETVAL + $mRETVAL`
     i=`expr $i + 1`
   done
@@ -343,7 +349,7 @@ EOF
 ##
 # Generic action handler
 ##
-case "$2" in 
+case "$TOR_SIGNAL" in 
   start         ) start;;
   reload        ) reload;;
   stop          ) stop;;
