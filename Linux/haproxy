@@ -4,7 +4,7 @@
 #
 # Purpose     :  A fast and reliable http reverse proxy and load balancer launch/terminate/... script
 #
-# Copyright   :  Written by and Copyright (C) 2023-03-17
+# Copyright   :  Written by and Copyright (C) 2023-04-26
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -39,113 +39,124 @@ EOF
   exit 1
 }
 
-[ $# -ne 1 ] && usage
+[[ $# -ne 1 ]] && usage
 
 . rc.common
 
 BASENAME=`basename $0`
+
 # check haproxy
 BINPATH=/usr/local/bin
 BINFILE=$BINPATH/$BASENAME
-if [ ! -x $BINFILE ]; then
+[[ ! -x $BINFILE ]] && {
   echo "Sorry, you haven't installed $BASENAME yet."
   echo "Please refer to the readme.md for the solution."
+  echo
   exit 1
-fi
+}
 
 CFGFILE=$PWD/$BASENAME.cfg
-[ -f $CFGFILE ] || exit 1
+[[ -f $CFGFILE ]] || {
+  echo "Sorry, I can't find $CFGFILE, that is used to with $BASENAME."
+  echo
+  exit 1
+}
+
 data_dir=$PWD/run/$BASENAME
 PIDFILE=$data_dir/$BASENAME.pid
 
 RETVAL=0
 
-start() {
-  if [ -e $PIDFILE ]; then
+start () {
+  [[ -e $PIDFILE ]] && {
     echo "$BASENAME is already running."
-    return 0
-  fi
-
+    echo
+    RETVAL=0
+    return $RETVAL
+  }
   quiet_check
-  if [ $? -ne 0 ]; then
+  [[ $? -ne 0 ]] && {
     echo "Errors found in configuration file, check it with '$0 check'."
-    return 1
-  fi
-
-  if [ ! -d "$data_dir" ]; then
-    echo "Creating directory $data_dir"
-    mkdir -p -m 700 "$data_dir"
-  fi
-
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  [[ ! -d "$data_dir" ]] && mkdir -p -m 700 "$data_dir" >/dev/null 2>&1
   echo "Starting $BASENAME."
-#  $BINFILE -D -f $CFGFILE -p $PIDFILE >$LOGFILE 2>&1
-  $BINFILE -D -f $CFGFILE -p $PIDFILE 2> /dev/null
-  RETVAL=$?
   echo
+  $BINFILE -D -f $CFGFILE -p $PIDFILE >/dev/null 2>&1
+  RETVAL=$?
   return $RETVAL
 }
 
-stop() {
-  if [ -e $PIDFILE ]; then
-    echo "Shutting down $BASENAME."
-    pid=$(GetPID $BASENAME)
-    kill -USR1 "$pid"
-    RETVAL=$?
-    echo
-    [ $RETVAL -eq 0 ] && rm -f $PIDFILE
-    return $RETVAL
-  else
+stop () {
+  [[ ! -e $PIDFILE ]] && {
     echo "$BASENAME is not running."
-    return 0
-  fi
+    echo
+    RETVAL=0
+    return $RETVAL
+  }
+  echo "Shutting down $BASENAME."
+  echo
+  pid=$(GetPID $BASENAME)
+  kill -USR1 "$pid"
+  RETVAL=$?
+  [[ $RETVAL -eq 0 ]] && rm -f $PIDFILE >/dev/null 2>&1
+  return $RETVAL
 }
 
-restart() {
+restart () {
   quiet_check
-  if [ $? -ne 0 ]; then
+  [[ $? -ne 0 ]] && {
     echo "Errors found in configuration file, check it with '$0 check'."
-    return 1
-  fi
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
   stop
   start
 }
 
-reload() {
-  if [ ! -e $PIDFILE ]; then
+reload () {
+  [[ ! -e $PIDFILE ]] && {
     echo "$BASENAME is not running."
-    return 1
-  fi
-
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
   quiet_check
-  if [ $? -ne 0 ]; then
+  [[ $? -ne 0 ]] && {
     echo "Errors found in configuration file, check it with '$0 check'."
-    return 1
-  fi
-
-  $BINFILE -D -f $CFGFILE -p $PIDFILE -sf $(cat $PIDFILE) 2> /dev/null
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  $BINFILE -D -f $CFGFILE -p $PIDFILE -sf $(cat $PIDFILE) >/dev/null 2>&1
 }
 
-check() {
+check () {
   $BINFILE -c -q -V -f $CFGFILE
 }
 
-quiet_check() {
+quiet_check () {
   $BINFILE -c -q -f $CFGFILE
 }
 
-condrestart() {
-  if [ ! -e $PIDFILE ]; then
+condrestart () {
+  [[ ! -e $PIDFILE ]] && {
     echo "$BASENAME is not running."
-    return 1
-  fi
-
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
   quiet_check
-  if [ $? -ne 0 ]; then
+  [[ $? -ne 0 ]] && {
     echo "Errors found in configuration file, check it with '$0 check'."
-    return 1
-  fi
-
-  [ -e $PIDFILE ] && restart || :
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  [[ -e $PIDFILE ]] && restart || :
 }
 
 ##

@@ -4,7 +4,7 @@
 #
 # Purpose     :  A Privoxy Enhancing Proxy launch/terminate/... script
 #
-# Copyright   :  Written by and Copyright (C) 2023-03-17
+# Copyright   :  Written by and Copyright (C) 2023-04-26
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -39,73 +39,78 @@ EOF
   exit 1
 }
 
-[ $# -ne 1 ] && usage
+[[ $# -ne 1 ]] && usage
 
 . rc.common
 
 BASENAME=`basename $0`
+
 # check privoxy
 BINPATH=/usr/local/sbin
 BINFILE=$BINPATH/$BASENAME
-if [ ! -x $BINFILE ]; then
+[[ ! -x $BINFILE ]] && {
   echo "Sorry, you haven't installed $BASENAME yet."
   echo "Please refer to the readme.md for the solution."
+  echo
   exit 1
-fi
+}
 
 CFGFILE=$PWD/$BASENAME.cfg
-[ -f $CFGFILE ] || exit 1
+[[ -f $CFGFILE ]] || {
+  echo "Sorry, I can't find $CFGFILE, that is used to with $BASENAME."
+  echo
+  exit 1
+}
+
 data_dir=$PWD/run/$BASENAME
 PIDFILE=$data_dir/$BASENAME.pid
 
 RETVAL=0
 
-start() {
-  if [ -e $PIDFILE ]; then
+start () {
+  [[ -e $PIDFILE ]] && {
     echo "$BASENAME is already running."
-    return 0
-  fi
-
-  if [ ! -d "$data_dir" ]; then
-    echo "Creating directory $data_dir"
-    mkdir -p -m 700 "$data_dir"
-  fi
-
+    echo
+    RETVAL=0
+    return $RETVAL
+  }
+  [[ ! -d "$data_dir" ]] && mkdir -p -m 700 "$data_dir" >/dev/null 2>&1
   echo "Starting $BASENAME enhancing proxy."
-#  $BINFILE --no-daemon --pidfile $PIDFILE $CFGFILE >$LOGFILE 2>&1 &
-  $BINFILE --no-daemon --pidfile $PIDFILE $CFGFILE 2>/dev/null &
-  RETVAL=$?
   echo
+  $BINFILE --no-daemon --pidfile $PIDFILE $CFGFILE >/dev/null 2>&1 &
+  RETVAL=$?
   return $RETVAL
 }
 
-stop() {
-  if [ -e $PIDFILE ]; then
-    echo "Shutting down $BASENAME."
-    pid=$(GetPID $BASENAME)
-    kill -TERM "$pid"
-    RETVAL=$?
-    echo
-    [ $RETVAL -eq 0 ] && rm -f $PIDFILE
-    return $RETVAL
-  else
+stop () {
+  [[ ! -e $PIDFILE ]] && {
     echo "$BASENAME is not running."
-    return 0
-  fi
+    echo
+    RETVAL=0
+    return $RETVAL
+  }
+  echo "Shutting down $BASENAME."
+  echo
+  pid=$(GetPID $BASENAME)
+  kill -TERM "$pid"
+  RETVAL=$?
+  [[ $RETVAL -eq 0 ]] && rm -f $PIDFILE >/dev/null 2>&1
+  return $RETVAL
 }
 
-restart() {
-  if [ -e $PIDFILE ]; then
-    echo "Restarting $BASENAME enhancing proxy."
-    pid=$(GetPID $BASENAME)
-    kill -HUP "$pid"
-    RETVAL=$?
-    echo
-    return $RETVAL
-  else
+restart () {
+  [[ ! -e $PIDFILE ]] && {
     stop
     start
-  fi
+    RETVAL=$?
+    return $RETVAL
+  }
+  echo "Restarting $BASENAME enhancing proxy."
+  echo
+  pid=$(GetPID $BASENAME)
+  kill -HUP "$pid"
+  RETVAL=$?
+  return $RETVAL
 }
 
 ##

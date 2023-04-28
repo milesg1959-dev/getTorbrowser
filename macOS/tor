@@ -4,7 +4,7 @@
 #
 # Purpose     :  A Tor(onion routers) launch/terminate/... script
 #
-# Copyright   :  Written by and Copyright (C) 2023-03-17
+# Copyright   :  Written by and Copyright (C) 2023-04-26
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -106,32 +106,40 @@ EOF
   exit 1
 }
 
-[ $# -ne 1 ] && usage
+[[ $# -ne 1 ]] && usage
 
 BASENAME=`basename $0`
+
+TOR_SIGNAL="$1"
 
 # check nc
 NCPATH=/usr/bin
 NCBIN=$NCPATH/nc
-if [ ! -x $NCBIN ]; then
+[[ ! -x $NCBIN ]] && {
   echo "Sorry, I can't find nc, that is used to communicate with Tor process."
   echo "The control signals needs to be send via nc/netcat."
   echo "Please refer to the readme.md for the solution."
+  echo
   exit 1
-fi
+}
 
 # check tor
 TEBPATH=$PWD/tor-expert-bundle
 TORPATH=$TEBPATH/$BASENAME
 TORBIN=$TORPATH/$BASENAME
-if [ ! -x $TORBIN ]; then
+[[ ! -x $TORBIN ]] && {
   echo "Sorry, I can't find $BASENAME."
   echo "Please refer to the readme.md to download and install the Tor Expert Bundle first."
+  echo
   exit 1
-fi
+}
 
-TOR_TORRC=$PWD/torrc
-[ -f $TOR_TORRC ] || exit 1
+TOR_TORRC=$PWD/torrc.cfg
+[[ -f $TOR_TORRC ]] || {
+  echo "Sorry, I can't find torrc, that is used to with Tor process."
+  echo
+  exit 1
+}
 TOR_GEOIP=$TEBPATH/data/geoip
 TOR_GEOIP6=$TEBPATH/data/geoip6
 
@@ -145,160 +153,157 @@ RUNPATH=$PWD/run
 
 RETVAL=0
 
-start() {
+start () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
   LOGFILE=$RUNPATH/$BASENAME/$BASENAME.log
-  if [ -e $PIDFILE ]; then
+  [[ -e $PIDFILE ]] && {
     echo "$BASENAME is already running."
+    echo
     RETVAL=0
-    echo
-  else
-    data_dir=$RUNPATH/$BASENAME
-    if [ ! -d "$data_dir" ]; then
-      echo "Creating directory $data_dir"
-      mkdir -p -m 700 "$data_dir"
-    fi
-    socks_port=$((TOR_BASE_SOCKS_PORT))
-    control_port=$((TOR_BASE_CTRL_PORT))
-    echo "Starting $BASENAME"
-    OLDPATH=$PWD
-    cd $TORPATH
-    $TORBIN --PidFile $PIDFILE -f $TOR_TORRC --DataDirectory $data_dir --GeoIPFile $TOR_GEOIP --GeoIPv6File $TOR_GEOIP6 --HashedControlPassword $TOR_HASHPASS --NewCircuitPeriod 60 --ControlPort $control_port --SocksPort "$TOR_HOST:$socks_port IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" >$LOGFILE 2>&1 &
-    RETVAL=$?
-    echo
-    cd $OLDPATH
-  fi
+    return $RETVAL
+  }
+  data_dir=$RUNPATH/$BASENAME
+  [[ ! -d "$data_dir" ]] && mkdir -p -m 700 "$data_dir" >/dev/null 2>&1
+  socks_port=$((TOR_BASE_SOCKS_PORT))
+  control_port=$((TOR_BASE_CTRL_PORT))
+  echo "Starting $BASENAME"
+  echo
+  OLDPATH=$PWD
+  cd $TORPATH
+  $TORBIN --PidFile $PIDFILE -f $TOR_TORRC --DataDirectory $data_dir --GeoIPFile $TOR_GEOIP --GeoIPv6File $TOR_GEOIP6 --HashedControlPassword $TOR_HASHPASS --NewCircuitPeriod 60 --ControlPort $control_port --SocksPort "$TOR_HOST:$socks_port IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" >$LOGFILE 2>&1 &
+  RETVAL=$?
+  cd $OLDPATH
   return $RETVAL
 }
 
-stop() {
+stop () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
   LOGFILE=$RUNPATH/$BASENAME/$BASENAME.log
-  if [ -e $PIDFILE ]; then
-    echo "Shutting down $BASENAME"
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=0
+    return $RETVAL
+  }
+  echo "Shutting down $BASENAME"
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL SHUTDOWN
 QUIT
 EOF
-    RETVAL=$?
-    echo
-    [ $RETVAL -eq 0 ] && rm -f $PIDFILE
-    [ $RETVAL -eq 0 ] && rm -f $LOGFILE
-  else
-    echo "$BASENAME is not running."
-    RETVAL=0
-    echo
-  fi
+  RETVAL=$?
+  [[ $RETVAL -eq 0 ]] && rm -f $PIDFILE >/dev/null 2>&1
+  [[ $RETVAL -eq 0 ]] && rm -f $LOGFILE >/dev/null 2>&1
   return $RETVAL
 }
 
-reload() {
+reload () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
-  if [ -e $PIDFILE ]; then
-    echo "$BASENAME: reload config items."
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  echo "$BASENAME: reload config items."
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL RELOAD
 QUIT
 EOF
-    RETVAL=$?
-    echo
-  else
-    echo "$BASENAME is not running."
-    RETVAL=1
-    echo
-  fi
+  RETVAL=$?
   return $RETVAL
 }
 
-cleardnscache() {
+cleardnscache () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
-  if [ -e $PIDFILE ]; then
-    echo "$BASENAME: Forget the client-side cached IPs for all hostnames."
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  echo "$BASENAME: Forget the client-side cached IPs for all hostnames."
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL CLEARDNSCACHE
 QUIT
 EOF
-    RETVAL=$?
-    echo
-  else
-    echo "$BASENAME is not running."
-    RETVAL=1
-    echo
-  fi
+  RETVAL=$?
   return $RETVAL
 }
 
-newnym() {
+newnym () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
-  if [ -e $PIDFILE ]; then
-    echo "$BASENAME: Switch to clean circuits."
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  echo "$BASENAME: Switch to clean circuits."
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL NEWNYM
 QUIT
 EOF
-    RETVAL=$?
-    echo
-    sleep 10
-  else
-    echo "$BASENAME is not running."
-    RETVAL=1
-    echo
-  fi
+  RETVAL=$?
+  sleep 10
   return $RETVAL
 }
 
-dormant() {
+dormant () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
-  if [ -e $PIDFILE ]; then
-    echo "$BASENAME: To become dormant."
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  echo "$BASENAME: To become dormant."
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL DORMANT
 QUIT
 EOF
-    RETVAL=$?
-    echo
-  else
-    echo "$BASENAME is not running."
-    RETVAL=1
-    echo
-  fi
+  RETVAL=$?
   return $RETVAL
 }
 
-active() {
+active () {
   PIDFILE=$RUNPATH/$BASENAME/$BASENAME.pid
-  if [ -e $PIDFILE ]; then
-    echo "$BASENAME: To stop being dormant."
-    control_port=$((TOR_BASE_CTRL_PORT))
-    $NCBIN $TOR_HOST $control_port << EOF
+  [[ ! -e $PIDFILE ]] && {
+    echo "$BASENAME is not running."
+    echo
+    RETVAL=1
+    return $RETVAL
+  }
+  echo "$BASENAME: To stop being dormant."
+  echo
+  control_port=$((TOR_BASE_CTRL_PORT))
+  $NCBIN $TOR_HOST $control_port << EOF
 AUTHENTICATE "$TOR_PASS"
 SIGNAL ACTIVE
 QUIT
 EOF
-    RETVAL=$?
-    echo
-  else
-    echo "$BASENAME is not running."
-    RETVAL=1
-    echo
-  fi
+  RETVAL=$?
   return $RETVAL
 }
 
 ##
 # Generic action handler
 ##
-case "$1" in 
+case "$TOR_SIGNAL" in 
   start         ) start;;
   reload        ) reload;;
   stop          ) stop;;

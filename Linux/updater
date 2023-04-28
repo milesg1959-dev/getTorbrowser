@@ -4,7 +4,7 @@
 #
 # Purpose     :  A local Tor Expert Bundle update script
 #
-# Copyright   :  Written by and Copyright (C) 2023-04-05
+# Copyright   :  Written by and Copyright (C) 2023-04-26
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -33,15 +33,11 @@
 cd "$(dirname "$0")"
 
 platform=`uname -m`
-[ $platform='x86_64' ] && {
-  TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-linux-x86_64.tar.gz
-} || {
-  TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-linux-i686.tar.gz
-}
+[[ $platform='x86_64' ]] && TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-linux-x86_64.tar.gz || TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-linux-i686.tar.gz
 
 TEB_PATH=$PWD/tor-expert-bundle
 
-echo "First, I need to find a Tor Expert Bundle package..."
+echo "First, I need to find a Tor Expert Bundle package ..."
 echo
 
 for file in `ls -Rrt $TEBP_FILE 2>/dev/null`
@@ -51,7 +47,7 @@ done
 echo
 echo
 
-[ -e $file ] && {
+[[ -e $file ]] && {
   echo "I found some Tor Expert Bundle packages, the lastest one of which is:"
   echo
   echo "  $file"
@@ -86,22 +82,18 @@ if [ $TEBP_VER == $TEB_VER -o $TEBP_VER \< $TEB_VER ]; then
 fi
 
 BAKDIR="${PWD}/Update/$(date +%Y%m%d%H%M)_bak"
-[ -d $BAKDIR ] && {
-  rm -rf $BAKDIR
-}
-[ ! -d $BAKDIR ] && {
-  mkdir -p -m 755 $BAKDIR
-}
+[[ -d $BAKDIR ]] && rm -rf $BAKDIR >/dev/null 2>&1
+[[ ! -d $BAKDIR ]] && mkdir -p -m 755 $BAKDIR >/dev/null 2>&1
 
 echo "Your Tor Expert Bundle needs to be updated, please wait ..."
 echo
 echo "Backup old files to $BAKDIR ..."
 echo
-mv -f $TEB_PATH $BAKDIR
+mv -f $TEB_PATH $BAKDIR >/dev/null 2>&1
 echo "Copy new file ..."
 echo
-mkdir -p -m 755 $TEB_PATH
-tar -xvf $file -C $TEB_PATH
+mkdir -p -m 755 $TEB_PATH >/dev/null 2>&1
+tar -xvf $file -C $TEB_PATH 2>/dev/null
 cat <<EOF > "$TEB_PATH/teb_version"
 $TEBP_VER
 EOF
