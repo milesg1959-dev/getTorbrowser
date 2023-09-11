@@ -1,0 +1,25 @@
+#
+# This is the config file, and
+# a '#' character indicates
+# a comment
+#
+# display platform
+:::::::::::::::::::::::::::::::::::::::
+:: Download the Torbrowser for Linux ::
+:::::::::::::::::::::::::::::::::::::::
+Torbrowser for Linux
+# match patten PAT ==> 12.0.1
+# old tor-browser-linux64-PAT_en-US.tar.xz
+# new tor-browser-linux64-PAT_ALL.tar.xz
+tor-browser-linux64-PAT_ALL.tar.xz
+# cut-point
+20
+# cutoff-chars
+_ALL*
+# download list
+sha256sums-signed-build.txt
+sha256sums-signed-build.txt.asc
+tor-browser-linux32-TBVER_ALL.tar.xz
+tor-browser-linux32-TBVER_ALL.tar.xz.asc
+tor-browser-linux64-TBVER_ALL.tar.xz
+tor-browser-linux64-TBVER_ALL.tar.xz.asc

@@ -1,8 +1,0 @@
-# HSTS 1.0 Known Hosts database for GNU Wget.
-# Edit at your own risk.
-# <hostname>	<port>	<incl. subdomains>	<created>	<max-age>
-mirror.oldsql.cc	0	1	1657948221	94608000
-tor.calyxinstitute.org	0	1	1657948127	31536000
-tor.eff.org	0	1	1657941533	63072000
-www.torproject.org	0	0	1657948514	15768000
-dist.torproject.org	0	0	1657948573	15768000
