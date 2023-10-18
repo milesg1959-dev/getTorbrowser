@@ -4,7 +4,7 @@
 #
 # Purpose     :  A local Tor Expert Bundle update script
 #
-# Copyright   :  Written by and Copyright (C) 2023-04-26
+# Copyright   :  Written by and Copyright (C) 2023-10-18
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -33,7 +33,8 @@
 cd "$(dirname "$0")"
 
 platform=`uname -m`
-[[ $platform='x86_64' ]] && TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-macos-x86_64.tar.gz || TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-*-macos-aarch64.tar.gz
+
+[[ $platform='x86_64' ]] && TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-macos-x86_64-*.tar.gz || TEBP_FILE=$HOME/Downloads/Torbrowser/*/tor-expert-bundle-macos-aarch64-*.tar.gz
 
 TEB_PATH=$PWD/tor-expert-bundle
 
@@ -62,8 +63,8 @@ echo "Now we need to determine whether this is the updated version of Tor Expert
 echo
 
 TEBP_VER=${file##*/}
-TEBP_VER=${TEBP_VER:18}
-TEBP_VER=${TEBP_VER%-macos*}
+[[ $platform='x86_64' ]] && TEBP_VER=${TEBP_VER:31} || TEBP_VER=${TEBP_VER:32}
+TEBP_VER=${TEBP_VER%.tar*}
 echo "Tor Expert Bundle package version number is: $TEBP_VER"
 echo
 

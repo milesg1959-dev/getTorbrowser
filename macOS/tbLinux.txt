@@ -5,18 +5,19 @@
 :: Download the Torbrowser for Linux ::
 :::::::::::::::::::::::::::::::::::::::
 Torbrowser for Linux
-# match patten PAT ==> 12.0.1
-tor-browser-linux64-PAT_ALL.tar.xz.asc
+# match patten PAT ==> 13.0
+tor-browser-linux-x86_64-PAT.tar.xz.asc
 # cut point
-20
+25
 # cut off
-_ALL*
+.tar*
 # download list
 # You can use '#' to comment out content you don't need
+#
 sha256sums-signed-build.txt
 sha256sums-signed-build.txt.asc
-tor-browser-linux32-TBVER_ALL.tar.xz
-tor-browser-linux32-TBVER_ALL.tar.xz.asc
-tor-browser-linux64-TBVER_ALL.tar.xz
-tor-browser-linux64-TBVER_ALL.tar.xz.asc
+tor-browser-linux-i686-TBVER.tar.xz
+tor-browser-linux-i686-TBVER.tar.xz.asc
+tor-browser-linux-x86_64-TBVER.tar.xz
+tor-browser-linux-x86_64-TBVER.tar.xz.asc
 #

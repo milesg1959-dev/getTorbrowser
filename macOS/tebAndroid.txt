@@ -5,22 +5,23 @@
 :: Download the Tor Expert Bundle for Android ::
 ::::::::::::::::::::::::::::::::::::::::::::::::
 Tor Expert Bundle for Android
-# match patten PAT ==> 12.0.1
-tor-expert-bundle-PAT-android-x86.tar.gz.asc
+# match patten PAT ==> 13.0
+tor-expert-bundle-android-aarch64-PAT.tar.gz.asc
 # cut point
-18
+34
 # cut off
--android*
+.tar*
 # download list
 # You can use '#' to comment out content you don't need
+#
 sha256sums-signed-build.txt
 sha256sums-signed-build.txt.asc
-tor-expert-bundle-TBVER-android-x86.tar.gz
-tor-expert-bundle-TBVER-android-x86.tar.gz.asc
-tor-expert-bundle-TBVER-android-x86_64.tar.gz
-tor-expert-bundle-TBVER-android-x86_64.tar.gz.asc
-tor-expert-bundle-TBVER-android-armv7.tar.gz
-tor-expert-bundle-TBVER-android-armv7.tar.gz.asc
-tor-expert-bundle-TBVER-android-aarch64.tar.gz
-tor-expert-bundle-TBVER-android-aarch64.tar.gz.asc
+tor-expert-bundle-android-aarch64-TBVER.tar.gz
+tor-expert-bundle-android-aarch64-TBVER.tar.gz.asc
+tor-expert-bundle-android-armv7-TBVER.tar.gz
+tor-expert-bundle-android-armv7-TBVER.tar.gz.asc
+tor-expert-bundle-android-x86-TBVER.tar.gz
+tor-expert-bundle-android-x86-TBVER.tar.gz.asc
+tor-expert-bundle-android-x86_64-TBVER.tar.gz
+tor-expert-bundle-android-x86_64-TBVER.tar.gz.asc
 #
