@@ -5,22 +5,23 @@
 :: Download the Torbrowser for Android ::
 :::::::::::::::::::::::::::::::::::::::::
 Torbrowser for Android
-# match patten PAT ==> 12.0.1
-tor-browser-PAT-android-aarch64-multi.apk.asc
+# match patten PAT ==> 13.0
+tor-browser-android-aarch64-PAT.apk.asc
 # cut point
-12
+28
 # cut off
--android*
+.apk*
 # download list
 # You can use '#' to comment out content you don't need
+#
 sha256sums-signed-build.txt
 sha256sums-signed-build.txt.asc
-tor-browser-TBVER-android-aarch64-multi.apk
-tor-browser-TBVER-android-aarch64-multi.apk.asc
-tor-browser-TBVER-android-armv7-multi.apk
-tor-browser-TBVER-android-armv7-multi.apk.asc
-tor-browser-TBVER-android-x86_64-multi.apk
-tor-browser-TBVER-android-x86_64-multi.apk.asc
-tor-browser-TBVER-android-x86-multi.apk
-tor-browser-TBVER-android-x86-multi.apk.asc
+tor-browser-android-aarch64-TBVER.apk
+tor-browser-android-aarch64-TBVER.apk.asc
+tor-browser-android-armv7-TBVER.apk
+tor-browser-android-armv7-TBVER.apk.asc
+tor-browser-android-x86-TBVER.apk
+tor-browser-android-x86-TBVER.apk.asc
+tor-browser-android-x86_64-TBVER.apk
+tor-browser-android-x86_64-TBVER.apk.asc
 #

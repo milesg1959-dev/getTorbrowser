@@ -5,18 +5,19 @@
 :: Download the Torbrowser for Windows ::
 :::::::::::::::::::::::::::::::::::::::::
 Torbrowser for Windows
-# match patten PAT ==> 12.0.1
-torbrowser-install-win64-PAT_ALL.exe.asc
+# match patten PAT ==> 13.0
+tor-browser-windows-x86_64-portable-PAT.exe.asc
 # cut point
-25
+36
 # cut off
-_ALL*
+.exe*
 # download list
 # You can use '#' to comment out content you don't need
+#
 sha256sums-signed-build.txt
 sha256sums-signed-build.txt.asc
-torbrowser-install-TBVER_ALL.exe
-torbrowser-install-TBVER_ALL.exe.asc
-torbrowser-install-win64-TBVER_ALL.exe
-torbrowser-install-win64-TBVER_ALL.exe.asc
+tor-browser-windows-i686-portable-TBVER.exe
+tor-browser-windows-i686-portable-TBVER.exe.asc
+tor-browser-windows-x86_64-portable-TBVER.exe
+tor-browser-windows-x86_64-portable-TBVER.exe.asc
 #
