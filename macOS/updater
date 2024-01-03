@@ -4,7 +4,7 @@
 #
 # Purpose     :  A local Tor Expert Bundle update script
 #
-# Copyright   :  Written by and Copyright (C) 2023-10-18
+# Copyright   :  Written by and Copyright (C) 2023-12-30
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -65,7 +65,7 @@ echo
 TEBP_VER=${file##*/}
 [[ $platform='x86_64' ]] && TEBP_VER=${TEBP_VER:31} || TEBP_VER=${TEBP_VER:32}
 TEBP_VER=${TEBP_VER%.tar*}
-echo "Tor Expert Bundle package version number is: $TEBP_VER"
+echo "The current Tor Expert Bundle package version number is: $TEBP_VER"
 echo
 
 TEBVER_FILE=$TEB_PATH/teb_version
@@ -73,7 +73,7 @@ for str in `cat "$TEBVER_FILE"`
 do
   TEB_VER="$str"
 done
-echo "Your Tor Expert Bundle version number is: $TEB_VER"
+echo "Yours Tor Expert Bundle version number is: $TEB_VER"
 echo
 
 if [ $TEBP_VER == $TEB_VER -o $TEBP_VER \< $TEB_VER ]; then
