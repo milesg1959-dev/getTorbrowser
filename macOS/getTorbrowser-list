@@ -1,0 +1,345 @@
+#!/usr/bin/env bash
+
+# File        :  getTorbrowser-list
+#
+# Purpose     :  To obtain the latest version of Tor Browser/Tor Expert Bundle download address
+#                and generate a download list
+#
+# Copyright   :  Written by and Copyright (C) 2023-12-30
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+cd "$(dirname "$0")"
+
+# check wget
+WGETPATH=/usr/local/bin
+WGETBIN=$WGETPATH/wget
+[[ ! -x $WGETBIN ]] && {
+  echo "Sorry, I can't find wget, that is used to download the Torbrowser."
+  echo "Please refer to the readme.md for the solution."
+  echo
+  exit 1
+}
+
+# By default, Tor & Privoxy are not started.
+TORPRIVOXY=off
+
+start_torprivoxy () {
+  [[ "$TORPRIVOXY" == "on" ]] && return 0
+  echo "We need to start Tor & Privoxy."
+  echo
+  ./tor start 2>/dev/null
+  [[ $? -ne 0 ]] && {
+    echo “An error occurred, tor did not start normally. Please resolve the issue and try again.”
+    echo
+    exit 1
+  }
+  echo
+  ./privoxy start 2>/dev/null
+  [[ $? -ne 0 ]] && {
+    echo “An error occurred, privoxy did not start normally. Please resolve the issue and try again.”
+    echo
+    exit 1
+  }
+  echo
+  TORPRIVOXY=on
+  return 0
+}
+
+stop_torprivoxy () {
+  [[ "$TORPRIVOXY" == "off" ]] && return 0
+  echo "We need to stop Tor & Privoxy."
+  echo
+  ./tor stop 2>/dev/null
+  [[ $? -ne 0 ]] && {
+    echo "An error occurred, tor did not stop normally. Please try to manually close it."
+    echo
+  }
+  echo
+  ./privoxy stop 2>/dev/null
+  [[ $? -ne 0 ]] && {
+    echo "An error occurred, privoxy did not stop normally. Please try to manually close it."
+    echo
+  }
+  echo
+  TORPRIVOXY=off
+  return 0
+}
+
+#
+# Choose what you want to download.
+#
+menu_item1=("Torbrowser" "Tor Expert Bundle")
+menu_title1="Choose what you want to download"
+menu_quit1="false"
+PS3_num1=`expr ${#menu_item1[@]} + 1`
+until [[ "$menu_quit1" == "true" ]];
+do
+  echo $menu_title1
+  echo
+  PS3="Make your choice [1..$PS3_num1]: "
+  select input1 in "${menu_item1[@]}" "Quit"; do
+	  [[ "${menu_item1[@]}" =~ "${input1}" ]] && {
+      echo
+	    echo "Okay, Your choice is $input1."
+      echo
+      [[ "$input1" == "Torbrowser" ]] && tb_or_teb="tb" || tb_or_teb="teb"
+
+      #
+      # Choose the download site.
+      #
+      # Save the original default delimiter of the system
+      IFS_OLD="${IFS}"
+      # Set new delimiter
+      IFS=$'\r\n'
+      num=0
+      for site in `cat sites.txt`
+      do
+        [[ "$site" == "#"* ]] && {
+          echo -e "\c"
+        } || {
+          menu_item2[$num]=${site}
+          num=`expr $num + 1`
+        }
+      done
+      # Restore the original default delimiter of the system
+      IFS=${IFS_OLD}
+      menu_title2="Choose the download site."
+      menu_quit2="false"
+      PS3_num2=`expr ${#menu_item2[@]} + 2`
+      until [[ "$menu_quit2" == "true" ]];
+      do
+        echo $menu_title2
+        echo
+        PS3="Make your choice [1..$PS3_num2]: "
+        select input2 in "${menu_item2[@]}" "Previous Menu" "Quit"; do
+          [[ "${menu_item2[@]}" =~ "${input2}" ]] && {
+            echo
+            echo "Okay, Your choice is $input2."
+            echo
+            [[ "$tb_or_teb" == "tb" ]] && DL_URL=${input2}/download/ || DL_URL=${input2}/download/tor/
+            DIST_URL=${input2}/dist/torbrowser/
+            # Test $DL_URL
+            echo "Let's try whether $DL_URL can connect..."
+            echo
+            echo "$WGETBIN -q -t 1 --spider --no-check-certificate $DL_URL"
+            $WGETBIN -q -t 1 --spider --no-check-certificate $DL_URL
+            [[ $? -eq 0 ]] && {
+              echo
+              echo "Yes, the $DL_URL can be connected."
+              echo
+            } || {
+              echo
+              echo "No, the $DL_URL can't connect."
+              echo
+              start_torprivoxy
+              WGETBIN=$WGETBIN" -e https_proxy=127.0.0.1:8118"
+              # Test proxy
+              echo "Test $DL_URL again until it can be connected..."
+              echo
+              proxy_ok="false"
+              until [[ "$proxy_ok" == "true" ]];
+              do
+                echo "$WGETBIN -q -t 1 --spider --no-check-certificate $DL_URL" 
+                $WGETBIN -q -t 1 --spider --no-check-certificate $DL_URL
+                [[ $? -eq 0 ]] && proxy_ok="true" || proxy_ok="false"
+              done
+              echo "Okey, now the $DL_URL can be connected." 
+              echo
+            }
+            echo "Let's Go."
+            echo
+
+            #
+            # Set save folder for downloaded files
+            #
+            DLDIR=$HOME/Downloads/Torbrowser
+            [[ ! -d $DLDIR ]] && mkdir -p -m 700 $DLDIR >/dev/null 2>&1
+
+            #
+            # Choose the platform.
+            #
+            # Save the original default delimiter of the system
+            IFS_OLD="${IFS}"
+            # Set new delimiter
+            IFS=$'\r\n'
+            num=0
+            for platform in `cat platforms.txt`
+            do
+              [[ "$platform" == "#"* ]] && {
+                echo -e "\c"
+              } || {
+                menu_item3[$num]=$platform
+                num=`expr $num + 1`
+              }
+            done
+            # Restore the original default delimiter of the system
+            IFS=${IFS_OLD}
+            menu_title3="Choose the platform."
+            menu_quit3="false"
+            PS3_num3=`expr ${#menu_item3[@]} + 2`
+            until [[ "$menu_quit3" == "true" ]];
+            do
+              echo $menu_title3
+              echo
+              PS3="Make your choice [1..$PS3_num3]: "
+              select input3 in "${menu_item3[@]}" "Previous Menu" "Quit"; do
+                [[ "${menu_item3[@]}" =~ "${input3}" ]] && {
+                  echo
+                  echo "Okay, Your choice is $input3."
+                  echo
+                  # Get the current version number.
+                  # Save the original default delimiter of the system
+                  IFS_OLD="${IFS}"
+                  # Set new delimiter
+                  IFS=$'\r\n'
+                  i=0
+                  for str in `cat $tb_or_teb$input3.txt`
+                  do
+                    [[ "$str" == "#"* ]] && {
+                      echo -e "\c"
+                    } || {
+                      para[$i]=$str
+                      i=`expr $i + 1`
+                    }
+                  done
+                  i=`expr $i - 1`
+                  # Restore the original default delimiter of the system
+                  IFS=${IFS_OLD}
+                  echo "${para[0]}"
+                  echo "${para[1]}"
+                  echo "${para[2]}"
+                  echo
+                  echo "Get the current version number of the ${para[3]} from $DL_URL"
+                  echo
+                  str=${para[4]//PAT/([^/]+)}
+                  cutpoint=`expr $((para[5])) + 1`
+                  cutoffchars=${para[6]}
+                  $WGETBIN -q -c -O tempa.txt $DL_URL
+                  tmpstr="$(grep -o -E -m 1 "${str}" tempa.txt | cut -c ${cutpoint}-)"
+	                TBVER="${tmpstr%$cutoffchars}"
+                  echo "Current version number is: $TBVER"
+                  echo
+                  [[ -e tempa.txt ]] && rm -rf tempa.txt >/dev/null 2>&1
+                  # Download the file.
+                  echo "The downloaded files will be saved in this folder:"
+                  echo
+                  echo "  $DLDIR/$TBVER"
+                  echo
+                  for i in $(seq 7 $i)
+                  do
+                    file=${para[i]//TBVER/${TBVER}}
+                    echo "Add $DIST_URL$TBVER/$file to $DLDIR/$TBVER/$TBVER.txt..."
+                    echo
+                    echo "$DIST_URL$TBVER/$file">>"$DLDIR/$TBVER/$TBVER.txt"
+                    echo
+                  done
+                  echo "Okay, the selected file has been added to the list. Enjoy!"
+                  echo
+                  break
+                }
+                case $input3 in
+	                "Previous Menu")
+                    echo
+	                  echo "Okay, Your choice is to return to the previous menu."
+                    echo
+                    WGETBIN=$WGETPATH/wget
+                    menu_quit3="true"
+                    break
+	                  ;;
+	                "Quit")
+                    echo
+	                  echo "Okay, Your choice is to quit."
+                    echo
+                    stop_torprivoxy
+                    echo "Bye!"
+                    echo
+                    exit 0
+	                  ;;
+                  *)
+                    echo
+                    echo "invalid option $REPLY, try again!"
+                    echo
+                    break
+                    ;;
+                esac
+              done
+            done
+            break
+          }
+          case $input2 in
+	          "Previous Menu")
+              echo
+	            echo "Okay, Your choice is to return to the previous menu."
+              echo
+              menu_quit2="true"
+              break
+	            ;;
+	          "Quit")
+              echo
+	            echo "Okay, Your choice is to quit."
+              echo
+              stop_torprivoxy
+              echo "Bye!"
+              echo
+              exit 0
+	            ;;
+            *)
+              echo
+              echo "invalid option $REPLY, try again!"
+              echo
+              break
+              ;;
+          esac
+        done
+      done
+      break
+    }
+    case $input1 in
+	    "Quit")
+        echo
+	      echo "Okay, Your choice is to quit."
+        echo
+        stop_torprivoxy
+        echo "Bye!"
+        echo
+        exit 0
+	      ;;
+      *)
+        echo
+        echo "invalid option $REPLY, try again!"
+        echo
+        break
+        ;;
+    esac
+  done
+done
+
+## End of getTorbrowser
+######################test only######################
+#read -p "press any key to exit..."
+#exit
+######################test only######################
+##
