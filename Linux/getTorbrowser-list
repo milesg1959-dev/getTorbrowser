@@ -5,7 +5,7 @@
 # Purpose     :  To obtain the latest version of Tor Browser/Tor Expert Bundle download address
 #                and generate a download list
 #
-# Copyright   :  Written by and Copyright (C) 2023-12-30
+# Copyright   :  Written by and Copyright (C) 2024-02-05
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -248,15 +248,26 @@ do
                   echo
                   echo "  $DLDIR/$TBVER"
                   echo
+                  [[ ! -d $DLDIR/$TBVER ]] && mkdir -p -m 700 $DLDIR/$TBVER >/dev/null 2>&1
                   for i in $(seq 7 $i)
                   do
                     file=${para[i]//TBVER/${TBVER}}
-                    echo "Add $DIST_URL$TBVER/$file to $DLDIR/$TBVER/$TBVER.txt..."
-                    echo
-                    echo "$DIST_URL$TBVER/$file">>"$DLDIR/$TBVER/$TBVER.txt"
-                    echo
+                    need_to_add="yes"
+                    [[ -e $DLDIR/$TBVER/$TBVER.txt ]] && {
+                      for list_item in `cat $DLDIR/$TBVER/$TBVER.txt`
+                      do
+                        [[ "$list_item" == "$DIST_URL$TBVER/$file" ]] && need_to_add="no"
+                      done
+                    }
+                    [[ "$need_to_add" == "yes" ]] && {
+                      echo
+                      echo "Add $DIST_URL$TBVER/$file to $DLDIR/$TBVER/$TBVER.txt..."
+                      echo
+                      echo "$DIST_URL$TBVER/$file">>"$DLDIR/$TBVER/$TBVER.txt"
+                      echo
+                    }
                   done
-                  echo "Okay, the selected file has been added to the list. Enjoy!"
+                  echo "The selected file has been added to the list. Enjoy!"
                   echo
                   break
                 }
