@@ -1,0 +1,60 @@
+# File        :  haproxy.cfg
+#
+# Copyright   :  Written by and Copyright (C) 2023-03-13
+#                Miles Guo. komg@hotmail.com
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+# 下面是配置文件
+global
+    maxconn 2000          #默认最大连接数
+
+defaults
+    mode   tcp            #所处理的类别,默认采用http模式
+    option  forwardfor    #将客户端真实ip加到HTTP Header中供后端服务器读取
+    option  httpclose     #每次请求完毕后主动关闭http通道,haproxy不支持keep-alive,只>能模拟这种模式的实现
+    retries 2             #2次连接失败就认为服务器不可用，主要通过后面的check检查
+    option  redispatch    #当serverid对应的服务器挂掉后，强制定向到其他健康服务器
+    option  abortonclose  #当服务器负载很高时，自动结束掉当前队列中处理比较久的链接
+    timeout connect 5000  #连接超时时间
+    timeout client  50000 #客户端连接超时时间
+    timeout server  50000 #服务器端连接超时时间
+
+frontend socks-in
+    mode tcp
+    bind 127.0.0.1:9050
+    default_backend socks-out
+
+backend socks-out
+    mode tcp
+    option      tcp-check
+    timeout server 3000
+    balance roundrobin
+    server socks01 127.0.0.1:9051 weight 5 check inter 2000 rise 2 fall 3
+    server socks02 127.0.0.1:9052 weight 5 check inter 2000 rise 2 fall 3
+    server socks03 127.0.0.1:9053 weight 5 check inter 2000 rise 2 fall 3
+    server socks04 127.0.0.1:9054 weight 5 check inter 2000 rise 2 fall 3
+    server socks05 127.0.0.1:9055 weight 5 check inter 2000 rise 2 fall 3
+    # weight 标示权重，check 标示检查
+
+#frontend http-in
+#    mode http
+#    bind 127.0.0.1:30015
+#    default_backend http-out
+
+#backend http-out
+#    mode http
+#    option      http-check
+#    timeout server 3000
+#    balance roundrobin
+#    server http01 127.0.0.1:30006 check inter 20000
+#    server http02 127.0.0.1:30007 check inter 20000
+#    server http03 127.0.0.1:30008 check inter 20000
+#    server http04 127.0.0.1:30009 check inter 20000
+#    server http05 127.0.0.1:30010 check inter 20000
+#    server http06 127.0.0.1:30011 check inter 20000
+#    # 使用check inter 20秒抓取一次代理情况
+
+# End of haproxy.cfg

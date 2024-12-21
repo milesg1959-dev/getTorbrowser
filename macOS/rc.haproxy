@@ -1,0 +1,227 @@
+# File        :  rc.haproxy
+#
+# Source function library.
+#
+# Purpose     :  Written for using HAproxy
+#                A fast and reliable http reverse proxy and load balancer
+#
+# Copyright   :  Written by and Copyright (C) 2024-12-21
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+. rc.common
+
+##
+# HAproxy control functions.
+##
+
+HAPROXY_RUNPATH=$PWD/run
+
+HAPROXY_TITLE=haproxy
+HAPROXY_DATAPATH=$HAPROXY_RUNPATH/$HAPROXY_TITLE
+HAPROXY_PIDFILE=$HAPROXY_DATAPATH/$HAPROXY_TITLE.pid
+
+HAPROXY_SIGNALS=( start stop restart reload condrestart check )
+HAPROXY_SIGNAL=""
+
+HAPROXY_RETVAL=0
+
+# check haproxy
+HAPROXY_BINFILE=$(GetCMD $HAPROXY_TITLE)
+[[ "${HAPROXY_BINFILE}" == "" ]] && {
+  echo "Sorry, you haven't installed $HAPROXY_TITLE yet."
+  echo "Please refer to the readme.md for the solution."
+  echo
+  exit 1
+}
+
+# check haproxy.cfg
+HAPROXY_CFGFILETMPL=$PWD/$HAPROXY_TITLE.cfg.tmpl
+echo $HAPROXY_CFGFILETMPL
+echo
+HAPROXY_CFGFILE=$PWD/$HAPROXY_TITLE.cfg
+check_file $HAPROXY_CFGFILE
+[[ $? -ne 0 ]] && {
+  echo "The $HAPROXY_TITLE.cfg file does not exist; creating $HAPROXY_TITLE.cfg file..."
+  cat $HAPROXY_CFGFILETMPL > $HAPROXY_CFGFILE
+  echo "Creation completed."
+}
+
+haproxy_usage() {
+  cat <<EOF
+Usage: $HAPROXY_TITLE {signal}
+
+The meaning of the signals are:
+  start        -- Start Haproxy service.
+  stop         -- Shutdown Haproxy service.
+  restart      -- Restart Haproxy service.
+  reload       -- Reload Haproxy service.
+  condrestart  -- Conditional restart Haproxy service.
+  check        -- Check Haproxy service.
+
+EOF
+  exit 1
+}
+
+haproxy_start () {
+  check_file $HAPROXY_PIDFILE
+  [[ $? -eq 0 ]] && {
+    echo "$HAPROXY_TITLE is already running."
+    echo
+    HAPROXY_RETVAL=0
+    return $HAPROXY_RETVAL
+  }
+  haproxy_quiet_check
+  [[ $? -ne 0 ]] && {
+    echo "Errors found in configuration file, check it with '$HAPROXY_TITLE check'."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  create_folder $HAPROXY_DATAPATH
+  [[ $? -ne 0 ]] && {
+    echo "Error creating directory $HAPROXY_DATAPATH"
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  echo "Starting $HAPROXY_TITLE."
+  echo
+  $HAPROXY_TITLE -D -f $HAPROXY_CFGFILE -p $HAPROXY_PIDFILE >/dev/null 2>&1
+  HAPROXY_RETVAL=$?
+  return $HAPROXY_RETVAL
+}
+
+haproxy_stop () {
+  check_file $HAPROXY_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$HAPROXY_TITLE is not running."
+    echo
+    HAPROXY_RETVAL=0
+    return $HAPROXY_RETVAL
+  }
+  echo "Shutting down $HAPROXY_TITLE."
+  echo
+  pid=$(GetPID $HAPROXY_PIDFILE)
+  kill -USR1 "$pid"
+  HAPROXY_RETVAL=$?
+  [[ $HAPROXY_RETVAL -eq 0 ]] && delete_file $HAPROXY_PIDFILE
+  return $RETVAL
+}
+
+haproxy_restart () {
+  haproxy_quiet_check
+  [[ $? -ne 0 ]] && {
+    echo "Errors found in configuration file, check it with '$HAPROXY_TITLE check'."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  haproxy_stop
+  haproxy_start
+}
+
+haproxy_reload () {
+  check_file $HAPROXY_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$HAPROXY_TITLE is not running."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  haproxy_quiet_check
+  [[ $? -ne 0 ]] && {
+    echo "Errors found in configuration file, check it with '$HAPROXY_TITLE check'."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  $HAPROXY_TITLE -D -f $HAPROXY_CFGFILE -p $HAPROXY_PIDFILE -sf $(cat $HAPROXY_PIDFILE) >/dev/null 2>&1
+}
+
+haproxy_check () {
+  $HAPROXY_TITLE -c -q -V -f $HAPROXY_CFGFILE
+}
+
+haproxy_quiet_check () {
+  $HAPROXY_TITLE -c -q -f $HAPROXY_CFGFILE
+}
+
+haproxy_condrestart () {
+  check_file $HAPROXY_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$HAPROXY_TITLE is not running."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  haproxy_quiet_check
+  [[ $? -ne 0 ]] && {
+    echo "Errors found in configuration file, check it with '$HAPROXY_TITLE check'."
+    echo
+    HAPROXY_RETVAL=1
+    return $HAPROXY_RETVAL
+  }
+  check_file $HAPROXY_PIDFILE
+  [[ $? -eq 0 ]] && haproxy_restart || :
+}
+
+haproxy_signal_handling() {
+  ##
+  # Generic action handler
+  ##
+  case "$HAPROXY_SIGNAL" in
+    start       ) 
+      haproxy_start
+      HAPROXY_RETVAL=$?
+      ;;
+    stop        ) 
+      haproxy_stop
+      HAPROXY_RETVAL=$?
+      ;;
+    restart     ) 
+      haproxy_restart
+      HAPROXY_RETVAL=$?
+      ;;
+    reload      ) 
+      haproxy_reload
+      HAPROXY_RETVAL=$?
+      ;;
+    condrestart ) 
+      haproxy_condrestart
+      HAPROXY_RETVAL=$?
+      ;;
+    check       ) 
+      haproxy_check
+      HAPROXY_RETVAL=$?
+      ;;
+    *           ) 
+      haproxy_usage
+      ;;
+  esac
+  return $HAPROXY_RETVAL
+}
+
+## End of rc.haproxy

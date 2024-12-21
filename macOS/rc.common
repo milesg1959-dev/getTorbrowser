@@ -2,7 +2,7 @@
 #
 # Source function library.
 #
-# Copyright   :  Written by and Copyright (C) 2023-03-15
+# Copyright   :  Written by and Copyright (C) 2024-12-21
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -33,11 +33,24 @@
 ##
 
 ##
+# miscellaneous
+##
+cd "$(dirname "$0")"
+BASENAME=`basename $0`
+
+##
+# For MAC
+##
+machine_arch=`uname -m`
+[[ "$machine_arch" == "arm64" ]] && machine_arch=aarch64
+
+##
 # Process management
 ##
 GetPID() {
-  local program="$1"
-  local pidfile="${PIDFILE:=$PWD/run/${program}/${program}.pid}"
+  # local program="$1"
+  local pidfile="$1"
+  # local pidfile="${PIDFILE:=$PWD/run/${program}/${program}.pid}"
   local pid=""
 
   if [ -f "${pidfile}" ]; then
@@ -56,5 +69,271 @@ GetPID() {
 	  return 1
   fi
 }
+
+##
+# command management
+##
+GetCMD() {
+  local program="$1"
+  local output=`command -v ${program} 2>/dev/null`
+  [[ "${output}" == "" ]] && return 1
+  echo "${output}"
+  return 0
+}
+
+##
+# file and folder management
+##
+check_file () {
+# $1 file name, If exist, return 0, else return 1
+  [[ -e $1 ]] && return 0 || return 1
+}
+delete_file () {
+# $1 file name, If exist, delete it, return $?
+  [[ -e $1 ]] && rm -rf $1 >/dev/null 2>&1
+  return $?
+}
+check_folder () {
+# $1 folder name, If exist, return 0, else return 1
+  [[ -d $1 ]] && return 0 || return 1
+}
+delete_folder () {
+# $1 folder name, If exist, delete it, return $?
+  [[ -d $1 ]] && rm -rf $1 >/dev/null 2>&1
+  return $?
+}
+create_folder () {
+# $1 folder name, If exist, return 0, else create it, return $?
+  [[ -d $1 ]] && return 0
+  mkdir -p -m 700 $1 >/dev/null 2>&1
+  return $?
+}
+renew_folder () {
+# $1 folder name, If exist, delete & re-create it, return $?
+  [[ -d $1 ]] && rm -rf $1 >/dev/null 2>&1
+  mkdir -p -m 700 $1 >/dev/null 2>&1
+  return $?
+}
+
+# check sort
+SORTBIN=$(GetCMD sort)
+[[ "${SORTBIN}" == "" ]] && {
+  echo "Sorry, you haven't installed sort yet."
+  echo "Please refer to the readme.md for the solution."
+  echo
+  exit 1
+}
+
+version_compare () {
+# Version_compare $1 LOCAL_VERSION="v1.1" $2 REMOTE_VERSION="v1.2" return: 0 $1=$2, 1 $1<$2, 2 $1>$2
+  [[ "$1" == "$2" ]] && { # The $1 is the same as the $2, no update is required!
+    return 0
+  }
+  [[ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" == "$1" ]] && { # The $1 is older than the $2, can be updated.
+    return 1
+  } || { # The $1 is newer than $2, no update required.
+    return 2
+  }
+}
+
+##
+# Some Menu function
+##
+# The menu return value will be stored in the $menu_result.
+menu_result=()
+scq_menu () { 
+# Single-choice menu (including an quit option), Only one item can be selected from the given menu list as the answer.
+# If the selected value is 'Quit', the program will terminate normally.
+# $1 menu_Maintitle $2 menu_Subtitle $3 menu_item return 0
+  menu_Maintitle=$1
+  menu_Subtitle=$2
+  menu_item=($3)
+  menu_quit="false"
+  PS3_num=`expr ${#menu_item[@]} + 1`
+  until [[ "$menu_quit" == "true" ]]; do
+    echo $menu_Maintitle
+    echo $menu_Subtitle
+    echo
+    PS3="Make your choice [1..$PS3_num]: "
+    select input in "${menu_item[@]}" "Quit"; do
+      [[ "${menu_item[@]}" =~ "${input}" ]] && {
+        echo
+        echo "Okay, Your choice is $input"
+        echo
+        menu_result=($input)
+        menu_quit="true"
+        break
+      }
+      case $input in
+	      "Quit")
+          echo
+	        echo "Okay, Bye!"
+          echo
+          exit 0
+	        ;;
+        *)
+          echo
+          echo "invalid option $REPLY, try again!"
+          echo
+          break
+          ;;
+      esac
+    done
+  done
+  return 0
+}
+sc_menu () {
+# Single-choice menu, Only one item can be selected from the given menu list as the answer.
+# $1 menu_Maintitle $2 menu_Subtitle $3 menu_item return 0
+  menu_Maintitle=$1
+  menu_Subtitle=$2
+  menu_item=($3)
+  menu_quit="false"
+  until [[ "$menu_quit" == "true" ]]; do
+    echo $menu_Maintitle
+    echo $menu_Subtitle
+    echo
+    PS3="Make your choice [1..${#menu_item[@]}]: "
+    select input in "${menu_item[@]}"; do
+      [[ "${menu_item[@]}" =~ "${input}" ]] && {
+        echo
+        echo "Okay, Your choice is $input"
+        echo
+        menu_result=($input)
+        menu_quit="true"
+        break
+      } || {
+        echo
+        echo "invalid option $REPLY, try again!"
+        echo
+        break
+      }
+    done
+  done
+  return 0
+}
+mc_menu () {
+# Multiple-choice menu, Multiple items can be selected from the given menu list as the answer.
+# note: the total number of entered answers cannot exceed the total number of menu items
+# redundant, duplicate, and invalid inputs will be ignored)
+# The selected value will be stored in the $menu_result.
+# echo The answer list is: ${menu_result[*]}
+# $1 menu_Maintitle $2 menu_Subtitle $3 menu_item return 0
+  menu_Maintitle=$1
+  menu_Subtitle=$2
+  menu_item=($3)
+  menu_quit="false"
+  num=0
+  # Save the original default delimiter of the system
+  IFS_OLD="${IFS}"
+  until [[ "$menu_quit" == "true" ]]; do
+    echo $menu_Maintitle
+    echo $menu_Subtitle
+    echo
+    PS3="Make your choice [1..${#menu_item[@]}]: "
+    select dummy in "${menu_item[@]}"; do # present numbered menu_item to user
+      # Parse ,-separated numbers entered into an array.
+      # Variable $REPLY contains whatever the user entered.
+      # Set new delimiter
+      IFS=', ' read -ra selmenu_item <<<"$REPLY"
+      # Loop over all numbers entered.
+      for choice in "${selmenu_item[@]}"; do
+        (( num >= ${#menu_item[@]} )) && break
+        #####################################################################################
+        # Validate the number entered.
+        #(( choice >= 1 && choice <= ${#menu_item[@]} )) && {
+        #  [[ "${menu_result[*]}" =~ "${menu_item[choice-1]}" ]] && {
+        #    echo "Choice #$(( ++i )): ($choice) ${menu_item[choice-1]} Repeated, ignore!"
+        #    echo
+        #  } || {
+        #    # If valid, echo the choice and its number.
+        #    echo "Choice #$(( ++i )): ($choice) ${menu_item[choice-1]} Add to list."
+        #    echo
+        #    menu_result[$num]=${menu_item[choice-1]}
+        #    num=`expr $num + 1`
+        #  }
+        #}
+        #####################################################################################
+        # Validate the number entered.
+        (( choice >= 1 && choice <= ${#menu_item[@]} )) && {
+          [[ "${menu_result[*]}" =~ "${menu_item[choice-1]}" ]] || {
+            # If valid, echo the choice and its number.
+            menu_result[$num]=${menu_item[choice-1]}
+            num=`expr $num + 1`
+          }
+        }
+      done
+      # There is already a valid selection, exit the prompt.
+      break
+    done
+    (( num >= ${#menu_item[@]} )) && {
+      echo "Okay, all the answers have been selected!"
+      menu_quit="true"
+      break
+    }
+    (( num >= 1 && num <= ${#menu_item[@]} )) && {
+      echo "Okay, we have the answer now!"
+      menu_quit="true"
+      break
+    }
+  done
+  # Restore the original default delimiter of the system
+  IFS=${IFS_OLD}
+  return 0
+}
+
+##
+# 判断参数是否为数字的函数
+##
+is_number() {
+  re='^[+-]?[0-9]+([.][0-9]+)?$'
+  [[ $1 =~ $re ]] && return 0 || return 1
+}
+# is_number() {
+#   re='^[+-]?[0-9]+([.][0-9]+)?$'
+#   if [[ $1 =~ $re ]]; then
+#     return 0 # 在 Bash 中，0 表示成功
+#   else
+#     return 1 # 非零表示失败
+#   fi
+# }
+# 使用方法
+# #!/usr/bin/env bash
+# #
+# if is_number "$1"; then
+#   VAR="$1"
+#   echo "The variable is a number: $VAR"
+# else
+#   echo "Need a number"
+# fi
+#
+
+##
+# 判断参数是否与数组中某项完全相等的函数
+##
+item_in_list() {
+  local item=$1
+  local list=($2)
+  local in_list=false
+  for item1 in "${list[@]}"; do
+    [[ $item1 == $item ]] && {
+      in_list=true
+      break
+    }
+  done
+  [[ $in_list == true ]] && return 0 || return 1
+}
+# 使用方法
+# #!/usr/bin/env bash
+# #
+# param_list=( start stop )
+# item_in_list "$1" "${param_list[*]}"
+# [[ $? -ne 0 ]] && {
+#   echo "Invalid parameter $1"
+#   echo
+# } || {
+#   echo "Valid parameter $1"
+#   echo
+# }
 
 ## End of rc.common

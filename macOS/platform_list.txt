@@ -1,8 +1,8 @@
 # The '#' character represents a comment
-#
 # You can use '#' to comment out content you don't need
-Windows
-macOS
-Linux
-Android
-# TorExpertBundle ; since 20230403, we don't need it
+#
+android
+linux
+macos
+windows
+full

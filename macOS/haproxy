@@ -2,9 +2,10 @@
 
 # File        :  haproxy
 #
-# Purpose     :  A fast and reliable http reverse proxy and load balancer launch/terminate/... script
+# Purpose     :  Written for using HAproxy
+#                A fast and reliable http reverse proxy and load balancer
 #
-# Copyright   :  Written by and Copyright (C) 2023-04-26
+# Copyright   :  Written by and Copyright (C) 2024-12-21
 #                Miles Guo. komg@hotmail.com
 #
 #                This program is free software; you can redistribute it
@@ -30,147 +31,27 @@
 #                changes ought to be passed back to me.
 #
 
-cd "$(dirname "$0")"
+. rc.haproxy
 
-usage() {
-  cat <<EOF
-Usage: $0 {start|stop|restart|reload|condrestart|check}
-EOF
-  exit 1
+# 无参数
+[[ $# -lt 1 ]] && haproxy_usage
+
+# 第一个参数...
+is_number "$1"
+# 参数必须是字符串
+[[ $? -eq 0 ]] && {
+  echo "Invalid parameter $1"
+  haproxy_usage
 }
-
-[[ $# -ne 1 ]] && usage
-
-. rc.common
-
-BASENAME=`basename $0`
-
-# check haproxy
-BINPATH=/usr/local/bin
-BINFILE=$BINPATH/$BASENAME
-[[ ! -x $BINFILE ]] && {
-  echo "Sorry, you haven't installed $BASENAME yet."
-  echo "Please refer to the readme.md for the solution."
+item_in_list "$1" "${HAPROXY_SIGNALS[*]}"
+[[ $? -ne 0 ]] && {
+  echo "Invalid parameter $1"
   echo
-  exit 1
+  haproxy_usage
 }
+HAPROXY_SIGNAL="$1"
 
-CFGFILE=$PWD/$BASENAME.cfg
-[[ -f $CFGFILE ]] || {
-  echo "Sorry, I can't find $CFGFILE, that is used to with $BASENAME."
-  echo
-  exit 1
-}
-
-data_dir=$PWD/run/$BASENAME
-PIDFILE=$data_dir/$BASENAME.pid
-
-RETVAL=0
-
-start () {
-  [[ -e $PIDFILE ]] && {
-    echo "$BASENAME is already running."
-    echo
-    RETVAL=0
-    return $RETVAL
-  }
-  quiet_check
-  [[ $? -ne 0 ]] && {
-    echo "Errors found in configuration file, check it with '$0 check'."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  [[ ! -d "$data_dir" ]] && mkdir -p -m 700 "$data_dir" >/dev/null 2>&1
-  echo "Starting $BASENAME."
-  echo
-  $BINFILE -D -f $CFGFILE -p $PIDFILE >/dev/null 2>&1
-  RETVAL=$?
-  return $RETVAL
-}
-
-stop () {
-  [[ ! -e $PIDFILE ]] && {
-    echo "$BASENAME is not running."
-    echo
-    RETVAL=0
-    return $RETVAL
-  }
-  echo "Shutting down $BASENAME."
-  echo
-  pid=$(GetPID $BASENAME)
-  kill -USR1 "$pid"
-  RETVAL=$?
-  [[ $RETVAL -eq 0 ]] && rm -f $PIDFILE >/dev/null 2>&1
-  return $RETVAL
-}
-
-restart () {
-  quiet_check
-  [[ $? -ne 0 ]] && {
-    echo "Errors found in configuration file, check it with '$0 check'."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  stop
-  start
-}
-
-reload () {
-  [[ ! -e $PIDFILE ]] && {
-    echo "$BASENAME is not running."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  quiet_check
-  [[ $? -ne 0 ]] && {
-    echo "Errors found in configuration file, check it with '$0 check'."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  $BINFILE -D -f $CFGFILE -p $PIDFILE -sf $(cat $PIDFILE) >/dev/null 2>&1
-}
-
-check () {
-  $BINFILE -c -q -V -f $CFGFILE
-}
-
-quiet_check () {
-  $BINFILE -c -q -f $CFGFILE
-}
-
-condrestart () {
-  [[ ! -e $PIDFILE ]] && {
-    echo "$BASENAME is not running."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  quiet_check
-  [[ $? -ne 0 ]] && {
-    echo "Errors found in configuration file, check it with '$0 check'."
-    echo
-    RETVAL=1
-    return $RETVAL
-  }
-  [[ -e $PIDFILE ]] && restart || :
-}
-
-##
-# Generic action handler
-##
-case "$1" in
-  start       ) start;;
-  stop        ) stop;;
-  restart     ) restart;;
-  reload      ) reload;;
-  condrestart ) condrestart;;
-  check       ) check;;
-  *           ) usage;;
-esac
+haproxy_signal_handling
  
 exit $?
 
