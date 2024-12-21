@@ -1,0 +1,160 @@
+# File        :  rc.privoxy
+#
+# Source function library.
+#
+# Purpose     :  Written for using Privoxy
+#                A Privoxy Enhancing Proxy
+#
+# Copyright   :  Written by and Copyright (C) 2024-12-21
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+. rc.common
+
+##
+# Privoxy control functions.
+##
+
+PRIVOXY_RUNPATH=$PWD/run
+
+PRIVOXY_TITLE=privoxy
+PRIVOXY_DATAPATH=$PRIVOXY_RUNPATH/$PRIVOXY_TITLE
+PRIVOXY_PIDFILE=$PRIVOXY_DATAPATH/$PRIVOXY_TITLE.pid
+
+PRIVOXY_SIGNALS=( start stop restart )
+PRIVOXY_SIGNAL=""
+
+PRIVOXY_RETVAL=0
+
+# check privoxy
+PRIVOXY_BINFILE=$(GetCMD $PRIVOXY_TITLE)
+[[ "${PRIVOXY_BINFILE}" == "" ]] && {
+  echo "Sorry, you haven't installed $PRIVOXY_TITLE yet."
+  echo "Please refer to the readme.md for the solution."
+  echo
+  exit 1
+}
+
+# check privoxy.cfg
+PRIVOXY_CFGFILETMPL=$PWD/$PRIVOXY_TITLE.cfg.tmpl
+PRIVOXY_CFGFILE=$PWD/$PRIVOXY_TITLE.cfg
+check_file $PRIVOXY_CFGFILE
+[[ $? -ne 0 ]] && {
+  echo "The $PRIVOXY_TITLE.cfg file does not exist; creating $PRIVOXY_TITLE.cfg file..."
+  cat $PRIVOXY_CFGFILETMPL > $PRIVOXY_CFGFILE
+  echo "Creation completed."
+}
+
+privoxy_usage() {
+  cat <<EOF
+Usage: $PRIVOXY_TITLE {signal}
+
+The meaning of the signals are:
+  start    -- Start Privoxy service.
+  stop     -- Shutdown Privoxy service.
+  restart  -- Restart Privoxy service.
+
+EOF
+  exit 1
+}
+
+privoxy_start () {
+  check_file $PRIVOXY_PIDFILE
+  [[ $? -eq 0 ]] && {
+    echo "$PRIVOXY_TITLE is already running."
+    echo
+    PRIVOXY_RETVAL=0
+    return $PRIVOXY_RETVAL
+  }
+  create_folder $PRIVOXY_DATAPATH
+  [[ $? -ne 0 ]] && {
+    echo "Error creating directory $PRIVOXY_DATAPATH"
+    echo
+    PRIVOXY_RETVAL=1
+    return $PRIVOXY_RETVAL
+  }
+  echo "Starting $PRIVOXY_TITLE enhancing proxy."
+  echo
+  $PRIVOXY_TITLE --no-daemon --pidfile $PRIVOXY_PIDFILE $PRIVOXY_CFGFILE >/dev/null 2>&1 &
+  PRIVOXY_RETVAL=$?
+  return $PRIVOXY_RETVAL
+}
+privoxy_stop () {
+  check_file $PRIVOXY_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$PRIVOXY_TITLE is not running."
+    echo
+    PRIVOXY_RETVAL=0
+    return $PRIVOXY_RETVAL
+  }
+  echo "Shutting down $PRIVOXY_TITLE."
+  echo
+  pid=$(GetPID $PRIVOXY_PIDFILE)
+  kill -TERM "$pid"
+  PRIVOXY_RETVAL=$?
+  return $PRIVOXY_RETVAL
+}
+privoxy_restart () {
+  check_file $PRIVOXY_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$PRIVOXY_TITLE is not running."
+    echo
+    privoxy_start
+    PRIVOXY_RETVAL=$?
+    return $PRIVOXY_RETVAL
+  }
+  echo "Restarting $PRIVOXY_TITLE enhancing proxy."
+  echo
+  pid=$(GetPID $PRIVOXY_PIDFILE)
+  kill -HUP "$pid"
+  PRIVOXY_RETVAL=$?
+  return $PRIVOXY_RETVAL
+}
+
+privoxy_signal_handling() {
+  ##
+  # Generic action handler
+  ##
+  case "$PRIVOXY_SIGNAL" in
+    start   ) 
+      privoxy_start
+      PRIVOXY_RETVAL=$?
+      ;;
+    stop    ) 
+      privoxy_stop
+      PRIVOXY_RETVAL=$?
+      ;;
+    restart ) 
+      privoxy_restart
+      PRIVOXY_RETVAL=$?
+      ;;
+    *       ) 
+      privoxy_usage
+      ;;
+  esac
+  return $PRIVOXY_RETVAL
+}
+
+## End of rc.privoxy

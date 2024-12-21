@@ -1,0 +1,442 @@
+# File        :  rc.onion
+#
+# Source function library.
+#
+# Purpose     :  Written for using Tor(onion routers)
+#
+# Copyright   :  Written by and Copyright (C) 2024-12-21
+#                Miles Guo. komg@hotmail.com
+#
+#                This program is free software; you can redistribute it
+#                and/or modify it under the terms of the GNU General
+#                Public License as published by the Free Software
+#                Foundation; either version 2 of the License, or (at
+#                your option) any later version.
+#
+#                This program is distributed in the hope that it will
+#                be useful, but WITHOUT ANY WARRANTY; without even the
+#                implied warranty of MERCHANTABILITY or FITNESS FOR A
+#                PARTICULAR PURPOSE.  See the GNU General Public
+#                License for more details.
+#
+#                The GNU General Public License should be included with
+#                this file.  If not, you can view it at
+#                http://www.gnu.org/copyleft/gpl.html
+#                or write to the Free Software Foundation, Inc.,
+#                51 Franklin Street, Fifth Floor, Boston, MA 02110-1301,
+#                USA
+#
+# Modification : If you modify this file please consider whether your 
+#                changes ought to be passed back to me.
+#
+
+##
+# Tor(onion routers) control functions.
+##
+
+## From Tor control protocol (Version 1)
+
+## SIGNAL
+
+#  Sent from the client to the server. The syntax is:
+
+#  "SIGNAL" SP Signal CRLF
+
+#  Signal = "RELOAD" / "SHUTDOWN" / "DUMP" / "DEBUG" / "HALT" /
+#           "HUP" / "INT" / "USR1" / "USR2" / "TERM" / "NEWNYM" /
+#           "CLEARDNSCACHE" / "HEARTBEAT" / "ACTIVE" / "DORMANT"
+#
+#  The meaning of the signals are:
+
+#      RELOAD    -- Reload: reload config items.
+#      SHUTDOWN  -- Controlled shutdown: if server is an OP, exit immediately.
+#                   If it's an OR, close listeners and exit after
+#                   ShutdownWaitLength seconds.
+#      DUMP      -- Dump stats: log information about open connections and
+#                   circuits.
+#      DEBUG     -- Debug: switch all open logs to loglevel debug.
+#      HALT      -- Immediate shutdown: clean up and exit now.
+#      CLEARDNSCACHE -- Forget the client-side cached IPs for all hostnames.
+#      NEWNYM    -- Switch to clean circuits, so new application requests
+#                   don't share any circuits with old ones.  Also clears
+#                   the client-side DNS cache.  (Tor MAY rate-limit its
+#                   response to this signal.)
+#      HEARTBEAT -- Make Tor dump an unscheduled Heartbeat message to log.
+#      DORMANT   -- Tell Tor to become "dormant".  A dormant Tor will
+#                   try to avoid CPU and network usage until it receives
+#                   user-initiated network request.  (Don't use this
+#                   on relays or hidden services yet!)
+#      ACTIVE    -- Tell Tor to stop being "dormant", as if it had received
+#                   a user-initiated network request.
+
+#  The server responds with "250 OK" if the signal is recognized (or simply
+#  closes the socket if it was asked to close immediately), or "552
+#  Unrecognized signal" if the signal is unrecognized.
+
+#  Note that not all of these signals have POSIX signal equivalents.  The
+#  ones that do are as below.  You may also use these POSIX names for the
+#  signal that have them.
+
+#      RELOAD: HUP
+#      SHUTDOWN: INT
+#      HALT: TERM
+#      DUMP: USR1
+#      DEBUG: USR2
+
+#  [SIGNAL DORMANT and SIGNAL ACTIVE were added in 0.4.0.1-alpha.]
+
+. rc.common
+
+TOR_RUNPATH=$PWD/run
+
+TOR_TITLE=tor
+TOR_DATAPATH=$TOR_RUNPATH/$TOR_TITLE
+TOR_PIDFILE=$TOR_DATAPATH/$TOR_TITLE.pid
+TOR_LOGFILE=$TOR_DATAPATH/$TOR_TITLE.log
+
+TOR_SIGNALS=( start stop reload cleardnscache newnym dormant active ) 
+TOR_SIGNAL=""
+TOR_INSTANCES=0
+TOR_INSTANCES_MAX=8
+TOR_INSTANCES_TORBROWSER=9
+
+TOR_RETVAL=0
+mTOR_RETVAL=0
+
+TEBPATH=$PWD/tor-expert-bundle
+TORPATH=$TEBPATH/tor
+
+TOR_GEOIP=$TEBPATH/data/geoip
+TOR_GEOIP6=$TEBPATH/data/geoip6
+
+TOR_HASHPASS="16:95808DE6B3C05297608CEFB43053E55F2755284AAA43650AF441A74DFD"
+TOR_PASS="toralone"
+
+TOR_HOST="127.0.0.1"
+# tor:9050/9051
+# torbrowser:9150/9151
+# nth tor:9250-9950/9251-9951
+# TOR_BASE_SOCKS_PORT=(9050 9150 9250 9350 9450 9550 9650 9750 9850 9950)
+# TOR_BASE_CTRL_PORT=(9051 9151 9251 9351 9451 9551 9651 9751 9851 9951)
+TOR_BASE_SOCKS_PORT=9050
+TOR_BASE_CTRL_PORT=9051
+
+TOR_SOCKS_PORT=$TOR_BASE_SOCKS_PORT
+TOR_CTRL_PORT=$TOR_BASE_CTRL_PORT
+
+# check nc
+NCBIN=$(GetCMD nc)
+[[ "${NCBIN}" == "" ]] && {
+  echo "Sorry, I can't find nc, that is used to communicate with Tor process."
+  echo "The control signals needs to be send via nc/netcat."
+  echo "Please refer to the readme.md for the solution."
+  echo
+  exit 1
+}
+
+# check tor
+TORBIN=$(GetCMD $TORPATH/tor)
+[[ "${TORBIN}" == "" ]] && {
+  echo "Sorry, I can't find tor."
+  echo "Please refer to the readme.md to download and install the Tor Expert Bundle first."
+  echo
+  exit 1
+}
+
+# check torrc
+TOR_TORRC_TMPL=$PWD/torrc.tmpl
+TOR_TORRC=$PWD/torrc
+check_file $TOR_TORRC
+[[ $? -ne 0 ]] && {
+  echo "The torrc file does not exist; creating torrc file..."
+  cat $TOR_TORRC_TMPL > $TOR_TORRC
+  echo "Creation completed."
+}
+
+tor_usage() {
+  cat <<EOF
+Usage: $TOR_TITLE {signal} {instance}
+
+The meaning of the signals are:
+  start         -- Start Tor service.
+  stop          -- Shutdown Tor service.
+  reload        -- Reload config items.
+  cleardnscache -- Forget the client-side cached IPs for all hostnames.
+  newnym        -- Switch to clean circuits, so new application requests
+                   don't share any circuits with old ones.  Also clears
+                   the client-side DNS cache.  (Tor MAY rate-limit its
+                   response to this signal.)
+  dormant       -- Tell Tor to become "dormant".  A dormant Tor will
+                   try to avoid CPU and network usage until it receives
+                   user-initiated network request.  (Don't use this
+                   on relays or hidden services yet!)
+  active        -- Tell Tor to stop being "dormant", as if it had received
+                   a user-initiated network request.
+
+The meaning of the instances are:
+  NIL           -- Send a signal to the default Tor service.
+                   (9050/9051)
+  torbrowser    -- Send a signal to the Tor service of Torbrowser.
+                   (9150/9151)(To be completed)
+  1..8          -- Send signals to the default Tor service and (1-8) instances.
+                   (9250/9251..9950/9951)
+  all           -- Send signals to all instances of Tor services, excluding the Tor service of Torbrowser.
+                   (If such services exist)
+
+EOF
+  exit 1
+}
+
+tor_start () {
+  check_file $TOR_PIDFILE
+  [[ $? -eq 0 ]] && {
+    echo "$TOR_TITLE is already running."
+    echo
+    TOR_RETVAL=0
+    return $TOR_RETVAL
+  }
+  create_folder $TOR_DATAPATH
+  [[ $? -ne 0 ]] && {
+    echo "Error creating directory $TOR_DATAPATH"
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "Starting $TOR_TITLE"
+  echo
+  OLDPATH=$PWD
+  cd $TORPATH
+  $TORBIN --PidFile $TOR_PIDFILE -f $TOR_TORRC --DataDirectory $TOR_DATAPATH --GeoIPFile $TOR_GEOIP --GeoIPv6File $TOR_GEOIP6 --HashedControlPassword $TOR_HASHPASS --NewCircuitPeriod 60 --ControlPort $TOR_CTRL_PORT --SocksPort "$TOR_HOST:$TOR_SOCKS_PORT IPv6Traffic PreferIPv6 KeepAliveIsolateSOCKSAuth" >$TOR_LOGFILE 2>&1 &
+  TOR_RETVAL=$?
+  echo
+  cd $OLDPATH
+  return $TOR_RETVAL
+}
+
+tor_stop () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=0
+    return $TOR_RETVAL
+  }
+  echo "Shutting down $TOR_TITLE"
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL SHUTDOWN
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  # [[ $TOR_RETVAL -eq 0 ]] && delete_file $TOR_PIDFILE
+  # [[ $? -ne 0 ]] && echo "Error deleting file $TOR_PIDFILE"
+  [[ $TOR_RETVAL -eq 0 ]] && delete_file $TOR_LOGFILE
+  [[ $? -ne 0 ]] && echo "Error deleting file $TOR_LOGFILE"
+  return $TOR_RETVAL
+}
+
+tor_reload () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "$TOR_TITLE: reload config items."
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL RELOAD
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  return $TOR_RETVAL
+}
+
+tor_cleardnscache () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "$TOR_TITLE: Forget the client-side cached IPs for all hostnames."
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL CLEARDNSCACHE
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  return $TOR_RETVAL
+}
+
+tor_newnym () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "$TOR_TITLE: Switch to clean circuits."
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL NEWNYM
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  sleep 10
+  return $TOR_RETVAL
+}
+
+tor_dormant () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "$TOR_TITLE: To become dormant."
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL DORMANT
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  return $TOR_RETVAL
+}
+
+tor_active () {
+  check_file $TOR_PIDFILE
+  [[ $? -ne 0 ]] && {
+    echo "$TOR_TITLE is not running."
+    echo
+    TOR_RETVAL=1
+    return $TOR_RETVAL
+  }
+  echo "$TOR_TITLE: To stop being dormant."
+  echo
+  nc $TOR_HOST $TOR_CTRL_PORT << EOF
+AUTHENTICATE "$TOR_PASS"
+SIGNAL ACTIVE
+QUIT
+EOF
+  TOR_RETVAL=$?
+  echo
+  return $TOR_RETVAL
+}
+
+tor_signal_handling() {
+  ##
+  # Generic action handler
+  ##
+  case "$TOR_SIGNAL" in 
+    start         )
+      tor_start
+      TOR_RETVAL=$?
+      ;;
+    reload        )
+      tor_reload
+      TOR_RETVAL=$?
+      ;;
+    stop          )
+      tor_stop
+      TOR_RETVAL=$?
+      ;;
+    cleardnscache )
+      tor_cleardnscache
+      TOR_RETVAL=$?
+      ;;
+    newnym        )
+      tor_newnym
+      TOR_RETVAL=$?
+      ;;
+    dormant       )
+      tor_dormant
+      TOR_RETVAL=$?
+      ;;
+    active        )
+      tor_active
+      TOR_RETVAL=$?
+      ;;
+    *             )
+      echo "Invalid parameter $TOR_SIGNAL"
+      echo
+      tor_usage
+      ;;
+  esac
+  return $TOR_RETVAL
+}
+tor_instance_settings() {
+  case $1 in 
+    0) # tor
+      TOR_SOCKS_PORT=$TOR_BASE_SOCKS_PORT
+      TOR_CTRL_PORT=$TOR_BASE_CTRL_PORT
+      TOR_TITLE=tor
+      TOR_DATAPATH=$TOR_RUNPATH/$TOR_TITLE
+      TOR_PIDFILE=$TOR_DATAPATH/$TOR_TITLE.pid
+      TOR_LOGFILE=$TOR_DATAPATH/$TOR_TITLE.log
+      ;;
+    [1-8]) # nth tor
+      num=`expr $1 + 1`
+      TOR_SOCKS_PORT=`expr $TOR_BASE_SOCKS_PORT + $num \* 100`
+      TOR_CTRL_PORT=`expr $TOR_BASE_CTRL_PORT + $num \* 100`
+      TOR_TITLE=tor_instance_"$1"
+      TOR_DATAPATH=$TOR_RUNPATH/$TOR_TITLE
+      TOR_PIDFILE=$TOR_DATAPATH/$TOR_TITLE.pid
+      TOR_LOGFILE=$TOR_DATAPATH/$TOR_TITLE.log
+      ;;
+    9) # torbrowser
+      num=`expr $1 - $TOR_INSTANCES_MAX`
+      TOR_SOCKS_PORT=`expr $TOR_BASE_SOCKS_PORT + $num \* 100`
+      TOR_CTRL_PORT=`expr $TOR_BASE_CTRL_PORT + $num \* 100`
+      TOR_TITLE=tor_instance_torbrowser
+      TOR_DATAPATH=$TOR_RUNPATH/$TOR_TITLE
+      TOR_PIDFILE=$TOR_DATAPATH/$TOR_TITLE.pid
+      TOR_LOGFILE=$TOR_DATAPATH/$TOR_TITLE.log
+      ;;
+  esac
+  return 0
+}
+tor_instance_handling() {
+  ##
+  # Generic instance handler
+  ##
+  case $TOR_INSTANCES in 
+    0) # tor
+      tor_instance_settings $TOR_INSTANCES
+      tor_signal_handling
+      TOR_RETVAL=$?
+      ;;
+    [1-8]) # nth tor
+      for (( i=0; i<=$TOR_INSTANCES; i++ ))
+      do
+        tor_instance_settings $i
+        tor_signal_handling
+        mTOR_RETVAL=$?
+        TOR_RETVAL=`expr $TOR_RETVAL + $mTOR_RETVAL`
+      done
+      ;;
+    9) # torbrowser
+      # tor_instance_settings $TOR_INSTANCES
+      # tor_signal_handling
+      TOR_RETVAL=0
+      echo "To be completed"
+      ;;
+  esac
+  return $TOR_RETVAL
+}
+
+## End of rc.onion
