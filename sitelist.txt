@@ -1,0 +1,20 @@
+# The '#' character represents a comment
+# You can use '#' to comment out content you don't need
+#
+# Torbrowser's mirror site (Recommended for use in China)
+# || "${line}" =~ ".."
+https://tor.calyxinstitute.org
+https://tor.eprci.net
+#
+# Torbrowser's mirror site (need by proxy)
+# || "${line}" =~ "?C=D;O=A" || "${line}" =~ "dist/torbrowser"
+https://torproject.ph3x.at
+https://cyberside.net.ee/sibul
+#
+# Torbrowser's mirror site (need by proxy)
+https://tor.eff.org
+https://tor.ybti.net
+#
+# Torbrowser's official site (need by proxy)
+https://www.torproject.org
+#

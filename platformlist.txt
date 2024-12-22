@@ -1,0 +1,8 @@
+# The '#' character represents a comment
+# You can use '#' to comment out content you don't need
+#
+android
+linux
+macos
+windows
+full

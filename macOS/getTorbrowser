@@ -43,10 +43,16 @@ bak_folder=$update_folder/$(date +%Y%m%d%H%M)_bak
 
 # By default, dist_url is: Torbrowser's official site
 dist_url="https://dist.torproject.org/torbrowser/"
-site_list="site_list.txt"
-select_dist_url () {
-# Select dist_url
-# return $?
+# check site.list.txt
+sitelist_tmpl=$PWD/sitelist.tmpl
+sitelist=$PWD/sitelist.txt
+check_file $sitelist
+[[ $? -ne 0 ]] && {
+  echo "The site list file does not exist; creating site list file..."
+  cat $sitelist_tmpl > $sitelist
+  echo "Creation completed."
+}
+select_dist_url () { # Select dist_url, return $?
   # Save the original default delimiter of the system
   IFS_OLD="${IFS}"
   # Set new delimiter
@@ -58,7 +64,7 @@ select_dist_url () {
       sites[$num]=${site}
       num=`expr $num + 1`
     }
-  done < $site_list
+  done < $sitelist
   # Restore the original default delimiter of the system
   IFS=${IFS_OLD}
   unset menu_result
@@ -177,11 +183,6 @@ get_index () { # $1 url
   return $?
 }
 
-# Specify_version
-# Latest_version
-# Do you need the latest version or a specific version?
-# Do you need the latest version of the software or a specific version?
-#
 available_version=()
 latest_version="0"
 specific_version="0"
@@ -217,23 +218,25 @@ get_available_version () {
   delete_file $index
   return 0
 }
-get_specific_version () {
-# Get specific version from available version list 
-# return 0
+get_specific_version () { # Get specific version from available version list, return 0
   unset menu_result
   sc_menu "Please choose a version from the list" "-------------------------------------" "${available_version[*]}"
   [[ "${menu_result}" != "$specific_version" ]] && specific_version="${menu_result}"
   return 0
 }
 
-# all_platforms and some_platforms
-# Do we need specific platforms or all platforms?
-# Do you need software for all platforms or just for certain platforms?
-#
 all_platforms=("full")
 all_platforms_num="0"
 specific_platforms=()
-platform_list="platform_list.txt"
+# check platformlist.txt
+platformlist_tmpl=$PWD/platformlist.tmpl
+platformlist=$PWD/platformlist.txt
+check_file $platformlist
+[[ $? -ne 0 ]] && {
+  echo "The platform list file does not exist; creating platform list file..."
+  cat $platformlist_tmpl > $platformlist
+  echo "Creation completed."
+}
 select_platforms () { # Select the platforms, multiple answers can be entered
   # Save the original default delimiter of the system
   IFS_OLD="${IFS}"
@@ -246,7 +249,7 @@ select_platforms () { # Select the platforms, multiple answers can be entered
       pfs[$num]=$line
       num=`expr $num + 1`
     }
-  done < $platform_list
+  done < $platformlist
   all_platforms_num=`expr $num - 1`
   # Restore the original default delimiter of the system
   IFS=${IFS_OLD}
