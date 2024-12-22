@@ -138,6 +138,7 @@ test_url () {
 # Test the url, Turn on the tor & privoxy switch when necessary.
 # When the tor & privoxy switch is turned on, if the test url fails more than three times, exit.
 # $1 url return 0/1
+  local test_number=( first second third fourth 5th )
   echo "Let's try to test whether $1 can be accessed..."
   echo
   echo "$wget_spider $1"
@@ -156,13 +157,14 @@ test_url () {
     num=0
     until [[ "$proxy_ok" == "true" || "$num" == "5" ]];
     do
+      echo Starting the ${test_number[$num]} test...
+      echo
       echo "$wget_spider $1"
       echo
       $wget_spider $1
       [[ $? -eq 0 ]] && proxy_ok="true"
       num=`expr $num + 1`
     done
-    echo "$num"
     [[ "$proxy_ok" == "false" ]] && {
       echo "The $1 cannot be accessed, Please check your network!"
       echo
