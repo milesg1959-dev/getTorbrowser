@@ -1,5 +1,17 @@
 # OSX
 .DS_Store
+Linux/.DS_Store
+Linux/tor-expert-bundle/.DS_Store
+Linux/tor-expert-bundle/data/.DS_Store
+Linux/tor-expert-bundle/debug/.DS_Store
+Linux/tor-expert-bundle/tor/.DS_Store
+Linux/tor-expert-bundle/tor/pluggable_transports/.DS_Store
+macOS/.DS_Store
+macOS/tor-expert-bundle/.DS_Store
+macOS/tor-expert-bundle/data/.DS_Store
+macOS/tor-expert-bundle/tor/.DS_Store
+macOS/tor-expert-bundle/tor/pluggable_transports/.DS_Store
+Windows/.DS_Store
 *~
 
 # other
