@@ -1,6 +1,6 @@
 (Note: Third-party tools licenses, please refer to their respective licenses.)
 
-getTorbrowser, updater, tor, mtor, haproxy, privoxy
+getTorbrowser, tor, haproxy, privoxy, rc.common, rc.onion, rc.privoxy, rc.haproxy
 Copyright (C) 2022-2023 Miles Guo. <komg AT hotmail.com>
 
                     GNU GENERAL PUBLIC LICENSE
