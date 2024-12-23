@@ -1,6 +1,13 @@
-*~
+# OSX
 .DS_Store
-macOS/.DS_Store
-Linux/.DS_Store
-Windows/.DS_Store
+*~
+
+# other
 .vscode
+
+# vim
+*.swp
+
+# tags
+ctags
+tags
