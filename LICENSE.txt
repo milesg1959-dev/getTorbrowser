@@ -1,7 +1,8 @@
 (Note: Third-party tools licenses, please refer to their respective licenses.)
 
-getTorbrowser, tor, haproxy, privoxy, rc.common, rc.onion, rc.privoxy, rc.haproxy
-Copyright (C) 2022-2023 Miles Guo. <komg AT hotmail.com>
+Shell script: getTorbrowser, tor, privoxy, haproxy
+              rc.common, rc.onion, rc.privoxy, rc.haproxy
+Copyright (C) 2022-2024 Miles Guo. <komg AT hotmail.com>
 
                     GNU GENERAL PUBLIC LICENSE
                        Version 3, 29 June 2007
